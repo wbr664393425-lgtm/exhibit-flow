@@ -1,0 +1,89 @@
+version: '3.8'
+
+services:
+  pig-mysql:
+    image: mysql:8.0
+    container_name: pig-mysql
+    hostname: pig-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-sdbs}
+      MYSQL_DATABASE: ${DB_NAME:-edu_fund}
+      MYSQL_ROOT_HOST: "%"
+      TZ: Asia/Shanghai
+    ports:
+      - "33306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-sdbs}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pig_default
+
+  pig-redis:
+    image: redis:7-alpine
+    container_name: pig-redis
+    hostname: pig-redis
+    restart: always
+    command: redis-server --requirepass ${REDIS_PASSWORD:-password} --appendonly yes
+    ports:
+      - "36379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-password}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pig_default
+
+  pig-boot:
+    build:
+      context: ./pig-boot
+      dockerfile: Dockerfile
+    container_name: pig-boot
+    hostname: pig-boot
+    restart: always
+    ports:
+      - "${APP_PORT:-9999}:9999"
+    environment:
+      MYSQL_HOST: pig-mysql
+      MYSQL_PORT: 3306
+      DB_NAME: ${DB_NAME:-edu_fund}
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-sdbs}
+      REDIS_HOST: pig-redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-password}
+      JASYPT_ENCRYPTOR_PASSWORD: ${JASYPT_ENCRYPTOR_PASSWORD:-pig}
+      TZ: Asia/Shanghai
+      JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
+    depends_on:
+      pig-mysql:
+        condition: service_healthy
+      pig-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/admin/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - pig_default
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  pig_default:
+    name: pig_default
+    driver: bridge

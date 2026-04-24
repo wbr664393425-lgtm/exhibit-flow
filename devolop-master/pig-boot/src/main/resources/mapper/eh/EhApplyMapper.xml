@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pig4cloud.pig.eh.mapper.EhApplyMapper">
+	<select id="selectAdminApplyBaseList" resultType="com.pig4cloud.pig.eh.vo.AdminApplyPageVO">
+		SELECT
+			a.id,
+			a.subject AS title,
+			a.visitor_company AS unit,
+			a.industry,
+			a.district,
+			a.applicant,
+			a.phone,
+			a.applicant_dept AS dept,
+			a.start_time AS startTime,
+			a.end_time AS endTime,
+			a.top_leader_title AS leader,
+			a.visitor_count AS headCount,
+			a.agenda,
+			a.status,
+			a.create_time AS created,
+			v.actual_visit_count AS actualHeadCount,
+			v.actual_visit_time AS actualVisitTime,
+			v.opportunity_code AS opportunityCode,
+			v.return_signer AS returnSigner,
+			v.return_time AS returnTime,
+			v.status AS visitStatus,
+			COALESCE(p.photo_count, 0) AS photoCount
+		FROM eh_apply a
+		LEFT JOIN eh_visit_record v ON v.apply_id = a.id AND v.del_flag = '0'
+		LEFT JOIN (
+			SELECT
+				visit_id,
+				COUNT(*) AS photo_count
+			FROM eh_visit_photo
+			WHERE del_flag = '0'
+			GROUP BY visit_id
+		) p ON p.visit_id = v.id
+		WHERE a.del_flag = '0'
+		<if test="status != null and status != ''">
+			AND a.status = #{status}
+		</if>
+		ORDER BY a.create_time DESC
+	</select>
+</mapper>

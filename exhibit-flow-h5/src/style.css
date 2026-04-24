@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Intercom-inspired warm tokens */
+  --t-bg: #faf9f6;
+  --t-surface: #ffffff;
+  --t-surface-warm: #f5f4f0;
+  --t-border: #dedbd6;
+  --t-border-dark: #c8c4be;
+  --t-text1: #111111;
+  --t-text2: #626260;
+  --t-text3: #9c9fa5;
+  --t-accent: #ff5600;
+  --t-accent-light: #fff2eb;
+  --t-accent-border: #ffcfb3;
+  --t-success: #2c6415;
+  --t-success-light: #f0f9eb;
+  --t-warning: #92400e;
+  --t-warning-light: #fffbeb;
+  --t-danger: #c41c1c;
+  --t-danger-light: #fef2f2;
+  --t-sidebar: #111111;
+
+  --t-font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  --t-font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+
+  font-family: var(--t-font-sans);
+  color: var(--t-text1);
+  background: var(--t-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--t-bg);
+  color: var(--t-text1);
+  font-family: var(--t-font-sans);
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--t-bg);
+}
+
+/* PC 端：居中展示，最大宽度 480px，模拟手机壳效果 */
+@media (min-width: 768px) {
+  body {
+    background: #e8e5e0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 24px 0 48px;
+    min-height: 100vh;
+  }
+
+  #app {
+    width: 480px;
+    min-height: calc(100vh - 72px);
+    background: var(--t-bg);
+    border-radius: 16px;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.18);
+    overflow: hidden;
+    position: relative;
+  }
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--t-border-dark);
+  border-radius: 3px;
+}
+
+@keyframes eh-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes eh-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Vant 主题覆盖，贴合 Intercom 暖色 */
+:root {
+  --van-primary-color: var(--t-text1);
+  --van-text-color: var(--t-text1);
+  --van-text-color-2: var(--t-text2);
+  --van-text-color-3: var(--t-text3);
+  --van-background: var(--t-bg);
+  --van-background-2: var(--t-surface);
+  --van-border-color: var(--t-border);
+  --van-button-primary-background: var(--t-text1);
+  --van-button-primary-border-color: var(--t-text1);
+  --van-button-border-radius: 4px;
+  --van-tabbar-item-active-color: var(--t-accent);
+  --van-nav-bar-background: var(--t-surface);
+  --van-nav-bar-title-text-color: var(--t-text1);
+  --van-cell-background: var(--t-surface);
+}

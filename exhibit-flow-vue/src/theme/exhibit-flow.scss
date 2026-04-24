@@ -1,0 +1,151 @@
+/* Intercom-inspired warm design tokens for 展厅管理员后台 */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+	--t-bg: #faf9f6;
+	--t-surface: #ffffff;
+	--t-surface-warm: #f5f4f0;
+	--t-border: #dedbd6;
+	--t-border-dark: #c8c4be;
+	--t-text1: #111111;
+	--t-text2: #626260;
+	--t-text3: #9c9fa5;
+	--t-accent: #ff5600;
+	--t-accent-light: #fff2eb;
+	--t-accent-border: #ffcfb3;
+	--t-success: #2c6415;
+	--t-success-light: #f0f9eb;
+	--t-warning: #92400e;
+	--t-warning-light: #fffbeb;
+	--t-danger: #c41c1c;
+	--t-danger-light: #fef2f2;
+
+	--t-font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+	--t-font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+
+/* 统一展厅页面的基础字体 */
+.eh-scope,
+.eh-scope * {
+	font-family: var(--t-font-sans);
+}
+
+/* 通用小组件 */
+.eh-mono-label {
+	font-family: var(--t-font-mono);
+	font-size: 10px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.9px;
+	color: var(--t-text3);
+}
+
+.eh-card {
+	background: var(--t-surface);
+	border-radius: 8px;
+	border: 1px solid var(--t-border);
+	transition: border-color 0.15s;
+}
+.eh-card--clickable {
+	cursor: pointer;
+}
+.eh-card--clickable:hover {
+	border-color: var(--t-border-dark);
+}
+
+.eh-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 8px;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	line-height: 1;
+}
+.eh-badge__dot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	display: inline-block;
+	flex-shrink: 0;
+}
+
+.eh-btn {
+	border-radius: 4px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.1s, transform 0.1s;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-family: inherit;
+	white-space: nowrap;
+	letter-spacing: 0.01em;
+	border: none;
+	line-height: 1.2;
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.45;
+	}
+	&:not(:disabled):hover {
+		transform: scale(1.04);
+	}
+	&:not(:disabled):active {
+		transform: scale(0.95);
+	}
+
+	&.eh-btn--sm { padding: 4px 10px; font-size: 11px; }
+	&.eh-btn--md { padding: 7px 14px; font-size: 13px; }
+	&.eh-btn--lg { padding: 10px 20px; font-size: 14px; }
+
+	&.eh-btn--primary { background: var(--t-text1); color: #fff; }
+	&.eh-btn--primary:not(:disabled):hover { background: #2d2d2b; }
+	&.eh-btn--orange { background: var(--t-accent); color: #fff; }
+	&.eh-btn--orange:not(:disabled):hover { background: #e64d00; }
+	&.eh-btn--secondary { background: var(--t-bg); color: var(--t-text1); border: 1px solid var(--t-border); }
+	&.eh-btn--secondary:not(:disabled):hover { background: var(--t-surface-warm); }
+	&.eh-btn--ghost { background: transparent; color: var(--t-text2); border: 1px solid var(--t-border); }
+	&.eh-btn--ghost:not(:disabled):hover { background: var(--t-bg); }
+	&.eh-btn--danger { background: var(--t-danger); color: #fff; }
+	&.eh-btn--danger:not(:disabled):hover { background: #991b1b; }
+	&.eh-btn--success { background: var(--t-success); color: #fff; }
+	&.eh-btn--success:not(:disabled):hover { background: #166534; }
+	&.eh-btn--outline { background: transparent; color: var(--t-text1); border: 1px solid var(--t-text1); }
+	&.eh-btn--outline:not(:disabled):hover { background: var(--t-bg); }
+}
+
+.eh-input__field,
+.eh-select__field {
+	border: 1px solid var(--t-border);
+	border-radius: 4px;
+	padding: 8px 10px;
+	font-size: 13px;
+	color: var(--t-text1);
+	outline: none;
+	background: var(--t-surface);
+	width: 100%;
+	box-sizing: border-box;
+	font-family: inherit;
+	transition: border-color 0.15s;
+}
+.eh-input__field:focus,
+.eh-select__field:focus {
+	border-color: var(--t-text1);
+}
+.eh-input__field--textarea {
+	resize: vertical;
+	min-height: 72px;
+}
+.eh-input__hint {
+	font-size: 11px;
+	color: var(--t-text3);
+}
+
+@keyframes eh-fade-up {
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,66 @@
+spring:
+  cache:
+    type: redis # 缓存类型 Redis
+  data:
+    redis:
+      database: 5
+      host: ${REDIS_HOST:127.0.0.1}
+      password: ${REDIS_PASSWORD:mypassword}
+      lettuce:
+        pool:
+          enabled: true         # 启用连接池
+          max-active: 8         # 最大活跃连接数（优化：降低资源占用）
+          max-idle: 4           # 最大空闲连接数
+          min-idle: 1           # 最小空闲连接数
+          max-wait: 3000ms      # 获取连接最大等待时间
+  # 数据库相关配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:root}
+    password: sdbs
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${DB_NAME:exhibit_flow}?characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=GMT%2B8&allowMultiQueries=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true&cachePrepStmts=true&prepStmtCacheSize=256&prepStmtCacheSqlLimit=2048&useServerPrepStmts=true
+    query-ds-sql: "select * from gen_datasource_conf where 1=0"
+    hikari:
+      maximum-pool-size: 10        # 最大连接数（优化：单体应用适中配置）
+      minimum-idle: 2              # 最小空闲连接数（优化：降低资源占用）
+      idle-timeout: 600000         # 空闲连接超时 10 分钟
+      max-lifetime: 1800000        # 连接最大存活时间 30 分钟
+      connection-timeout: 5000     # 获取连接超时 5 秒
+      keepalive-time: 60000        # 保活检测间隔 1 分钟
+      pool-name: ExhibitFlowHikariPool # 连接池名称（便于监控）
+
+# Undertow 服务器调优
+server:
+  undertow:
+    threads:
+      io: 4          # IO 线程数（通常等于 CPU 核心数）
+      worker: 32     # 工作线程数（处理业务逻辑）
+    buffer-size: 1024
+    direct-buffers: true
+
+# 本地文件系统
+file:
+  local:
+    enable: true
+    base-path: ./upload
+
+## 登录配置
+security:
+  # 登录报文加密根密钥 ，必须是16位
+  encodeKey: thanks,pig4cloud
+  # 跳过验证码校验的客户端
+  ignore-clients:
+    - test
+    - pig
+
+# 配置文件加密根密码
+jasypt:
+  encryptor:
+    password: pig  # 加密根密码
+    algorithm: PBEWITHHMACSHA512ANDAES_256  # 升级为 AES-256（更安全）
+    iv-generator-classname: org.jasypt.iv.RandomIvGenerator  # 随机向量生成器（AES 必需）
+
+# 短信插件配置：https://www.yuque.com/vxixfq/pig/zw8udk
+sms:
+  is-print: false # 是否打印日志
+  config-type: yaml # 配置类型，yaml

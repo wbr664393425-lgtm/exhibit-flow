@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pig4cloud.pig.eh.mapper.EhChangeLogMapper">
+	<select id="selectAdminChangeLogList" resultType="com.pig4cloud.pig.eh.vo.AdminChangeLogVO">
+		SELECT
+			l.id,
+			l.apply_id AS applyId,
+			l.change_type AS type,
+			a.subject AS title,
+			l.old_start_time AS oldStartTime,
+			l.new_start_time AS newStartTime,
+			l.reason,
+			l.create_by AS operator,
+			l.create_time AS time
+		FROM eh_change_log l
+		LEFT JOIN eh_apply a ON a.id = l.apply_id AND a.del_flag = '0'
+		WHERE l.del_flag = '0'
+		ORDER BY l.create_time DESC
+	</select>
+</mapper>
