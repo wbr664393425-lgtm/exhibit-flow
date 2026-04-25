@@ -20,7 +20,14 @@
 package com.pig4cloud.pig.eh.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.pig4cloud.pig.eh.dto.ApplyFormDTO;
+import com.pig4cloud.pig.eh.dto.ApplyRescheduleDTO;
 import com.pig4cloud.pig.eh.entity.EhApply;
+import com.pig4cloud.pig.eh.vo.ApplyDetailVO;
+import com.pig4cloud.pig.eh.vo.EhCalendarEventVO;
+import com.pig4cloud.pig.eh.vo.EhCalendarExportVO;
+
+import java.util.List;
 
 public interface EhApplyService extends IService<EhApply> {
 
@@ -33,5 +40,23 @@ public interface EhApplyService extends IService<EhApply> {
 	 * @return 冲突申请的描述字符串（如"华为技术参观（09:00 - 11:30）"），无冲突返回 null
 	 */
 	String checkConflict(String date, String startHour, String endHour);
+
+	ApplyDetailVO getApplyDetail(Long id);
+
+	boolean saveDraft(ApplyFormDTO dto);
+
+	boolean submitApply(ApplyFormDTO dto);
+
+	boolean updateDraft(Long id, ApplyFormDTO dto);
+
+	boolean updateAndSubmit(Long id, ApplyFormDTO dto);
+
+	boolean cancelApply(Long id, String reason);
+
+	boolean rescheduleApply(Long id, ApplyRescheduleDTO dto);
+
+	List<EhCalendarEventVO> listCalendarEvents(String start, String end);
+
+	List<EhCalendarExportVO> listCalendarExportRows(String start, String end);
 
 }

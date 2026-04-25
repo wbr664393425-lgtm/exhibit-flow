@@ -16,7 +16,14 @@ export const useUserStore = defineStore('user', () => {
         password: encryptPassword(formData.password),
         scope: 'server',
       },
-      headers: { Authorization: 'Basic cGlnOnBpZw==' },
+      auth: {
+        username: 'pig',
+        password: 'pig',
+      },
+      headers: {
+        Authorization: 'Basic cGlnOnBpZw==',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     });
     token.value = res.access_token;
     username.value = formData.username;

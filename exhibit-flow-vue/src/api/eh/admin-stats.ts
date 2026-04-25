@@ -84,6 +84,14 @@ export function fetchFunnel() {
 				{ stage: '商机跟进', count: 14 },
 				{ stage: '签约转化', count: 7 },
 			],
-		});
+	});
 	return request({ url: '/admin/eh/stats/funnel', method: 'get' });
+}
+
+export function exportExcel() {
+	return request({
+		url: '/admin/eh/stats/export',
+		method: 'get',
+		responseType: 'blob',
+	});
 }

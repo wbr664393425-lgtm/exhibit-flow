@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS `eh_notification` (
+    `id` BIGINT NOT NULL COMMENT '主键ID',
+    `apply_id` BIGINT DEFAULT NULL COMMENT '关联申请ID',
+    `recipient` VARCHAR(64) NOT NULL COMMENT '接收人用户名',
+    `type` VARCHAR(32) NOT NULL COMMENT '通知类型',
+    `title` VARCHAR(255) NOT NULL COMMENT '通知标题',
+    `content` VARCHAR(1000) NOT NULL COMMENT '通知内容',
+    `route` VARCHAR(255) DEFAULT NULL COMMENT '跳转路由',
+    `read_flag` CHAR(1) NOT NULL DEFAULT '0' COMMENT '是否已读,0未读,1已读',
+    `read_time` DATETIME DEFAULT NULL COMMENT '已读时间',
+    `create_by` VARCHAR(64) DEFAULT NULL COMMENT '创建人',
+    `update_by` VARCHAR(64) DEFAULT NULL COMMENT '修改人',
+    `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+    `del_flag` CHAR(1) NOT NULL DEFAULT '0' COMMENT '删除标记,0正常,1删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_eh_notification_recipient` (`recipient`),
+    KEY `idx_eh_notification_apply_id` (`apply_id`),
+    KEY `idx_eh_notification_read_flag` (`read_flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='展厅通知中心';

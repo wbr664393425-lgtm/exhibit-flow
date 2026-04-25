@@ -10,7 +10,15 @@ const service = axios.create({
 service.interceptors.request.use(
   (config) => {
     const token = getToken();
-    if (token) {
+    const requestUrl = config.url || '';
+    const isTokenRequest = requestUrl.includes('/oauth2/token');
+    const hasAuthorizationHeader =
+      !!config.headers?.Authorization ||
+      !!config.headers?.authorization ||
+      (typeof (config.headers as any)?.get === 'function' &&
+        !!(config.headers as any).get('Authorization'));
+    // 登录换 token 请求使用 Basic，不注入 Bearer
+    if (token && !isTokenRequest && !hasAuthorizationHeader) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
     return config;

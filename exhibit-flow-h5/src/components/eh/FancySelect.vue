@@ -1,5 +1,5 @@
 <template>
-  <div class="eh-select" ref="rootRef">
+  <div class="eh-select">
     <MonoLabel v-if="label">
       <span v-if="required" class="eh-select__required">✱</span>
       {{ label }}
@@ -66,8 +66,6 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 
 const open = ref(false);
-const rootRef = ref<HTMLElement>();
-
 const normalized = computed(() =>
   props.options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
 );

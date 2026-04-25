@@ -19,46 +19,50 @@
 		</div>
 
 		<Card :style="{ overflow: 'hidden' }">
-			<!-- 星期头 -->
-			<div class="eh-cal__grid eh-cal__thead">
-				<div class="eh-cal__gutter" />
-				<div
-					v-for="(d, i) in dates"
-					:key="i"
-					class="eh-cal__wd-cell"
-					:class="{ 'eh-cal__wd-cell--today': isToday(d) }"
-				>
-					<MonoLabel :style="{ color: isToday(d) ? 'var(--t-accent)' : 'var(--t-text3)', display: 'block', marginBottom: '3px' }">{{ WD[i] }}</MonoLabel>
-					<div class="eh-cal__wd-num" :class="{ 'eh-cal__wd-num--today': isToday(d) }">{{ d.getDate() }}</div>
-				</div>
-			</div>
+			<Transition :name="slideName" mode="out-in">
+				<div :key="weekKey" class="eh-cal__pane">
+					<!-- 星期头 -->
+					<div class="eh-cal__grid eh-cal__thead">
+						<div class="eh-cal__gutter" />
+						<div
+							v-for="(d, i) in dates"
+							:key="i"
+							class="eh-cal__wd-cell"
+							:class="{ 'eh-cal__wd-cell--today': isToday(d) }"
+						>
+							<MonoLabel :style="{ color: isToday(d) ? 'var(--t-accent)' : 'var(--t-text3)', display: 'block', marginBottom: '3px' }">{{ WD[i] }}</MonoLabel>
+							<div class="eh-cal__wd-num" :class="{ 'eh-cal__wd-num--today': isToday(d) }">{{ d.getDate() }}</div>
+						</div>
+					</div>
 
-			<!-- 时间槽 -->
-			<div class="eh-cal__body">
-				<div v-for="h in hours" :key="h" class="eh-cal__grid eh-cal__row">
-					<div class="eh-cal__hour">{{ h }}:00</div>
-					<div
-						v-for="(d, i) in dates"
-						:key="i"
-						class="eh-cal__slot"
-						:class="{ 'eh-cal__slot--today': isToday(d) }"
-					>
-					<div
-						v-for="ev in slotEvents(d, h)"
-						:key="ev.id"
-						:class="['eh-cal__event', eventClass(ev)]"
-						:style="eventStyle(ev)"
-						@click="ElMessage.info(`${ev.title}：${ev.startTime} — ${ev.end}`)"
-					>
-							<div class="eh-cal__event-title">{{ ev.title }}</div>
-							<div v-if="eventSize(ev) === 'lg' || eventSize(ev) === 'xl'" class="eh-cal__event-meta">
-								{{ ev.status === 'approved' ? '已批准' : '审批中' }}
+					<!-- 时间槽 -->
+					<div class="eh-cal__body">
+						<div v-for="h in hours" :key="h" class="eh-cal__grid eh-cal__row">
+							<div class="eh-cal__hour">{{ h }}:00</div>
+							<div
+								v-for="(d, i) in dates"
+								:key="i"
+								class="eh-cal__slot"
+								:class="{ 'eh-cal__slot--today': isToday(d) }"
+							>
+							<div
+								v-for="ev in slotEvents(d, h)"
+								:key="ev.id"
+								:class="['eh-cal__event', eventClass(ev)]"
+								:style="eventStyle(ev)"
+								@click="ElMessage.info(`${ev.title}：${ev.startTime} — ${ev.end}`)"
+							>
+									<div class="eh-cal__event-title">{{ ev.title }}</div>
+									<div v-if="eventSize(ev) === 'lg' || eventSize(ev) === 'xl'" class="eh-cal__event-meta">
+										{{ ev.status === 'approved' ? '已批准' : '审批中' }}
+									</div>
+									<div class="eh-cal__event-time">{{ ev.startTime }} — {{ ev.end }}</div>
+								</div>
 							</div>
-							<div class="eh-cal__event-time">{{ ev.startTime }} — {{ ev.end }}</div>
 						</div>
 					</div>
 				</div>
-			</div>
+			</Transition>
 		</Card>
 	</div>
 </template>
@@ -68,17 +72,14 @@ import { computed, onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Card, Btn, Ic, MonoLabel } from '/@/components/eh';
 import { fetchCalendar } from '/@/api/eh/calendar';
+import { downBlobFile } from '/@/utils/other';
 
 interface CalEvent { id: string; title: string; start: string; startTime: string; end: string; status: string; }
 
 const WD = ['日', '一', '二', '三', '四', '五', '六'];
 const cur = ref(new Date('2026-04-23'));
 const events = ref<CalEvent[]>([]);
-
-onMounted(async () => {
-	const res = await fetchCalendar();
-	events.value = res.data || [];
-});
+const slideDir = ref<'left' | 'right'>('left');
 
 const dates = computed(() => {
 	const d = cur.value;
@@ -90,9 +91,15 @@ const dates = computed(() => {
 		return x;
 	});
 });
+const weekKey = computed(() => ds(dates.value[0]));
+const slideName = computed(() => (slideDir.value === 'left' ? 'eh-slide-left' : 'eh-slide-right'));
 
 const hours = Array.from({ length: 11 }, (_, i) => i + 8);
 const HOUR_ROW_HEIGHT = 52;
+
+onMounted(() => {
+	loadCalendar();
+});
 
 function ds(d: Date) {
 	return d.toISOString().split('T')[0];
@@ -101,9 +108,11 @@ function isToday(d: Date) {
 	return ds(d) === '2026-04-23';
 }
 function jump(delta: number) {
+	slideDir.value = delta > 0 ? 'left' : 'right';
 	const n = new Date(cur.value);
 	n.setDate(cur.value.getDate() + delta);
 	cur.value = n;
+	loadCalendar();
 }
 function slotEvents(d: Date, h: number) {
 	return events.value.filter((e) => e.start === ds(d) && parseInt(e.startTime.split(':')[0], 10) === h);
@@ -143,7 +152,23 @@ function eventStyle(ev: CalEvent) {
 	};
 }
 function onExport() {
-	ElMessage.info('正在生成导出文件…');
+	downBlobFile('/admin/eh/apply/calendar/export', currentRange(), '排期日历.xlsx');
+}
+
+async function loadCalendar() {
+	try {
+		const res = await fetchCalendar(currentRange());
+		events.value = res.data || [];
+	} catch (e: any) {
+		ElMessage.error(e?.msg || '加载日历失败');
+	}
+}
+
+function currentRange() {
+	return {
+		start: ds(dates.value[0]),
+		end: ds(dates.value[6]),
+	};
 }
 </script>
 
@@ -383,5 +408,26 @@ function onExport() {
 	margin-top: 3px;
 	font-family: var(--t-font-mono);
 	letter-spacing: 0.2px;
+}
+
+.eh-cal__pane {
+	position: relative;
+}
+
+.eh-slide-left-enter-active,
+.eh-slide-left-leave-active,
+.eh-slide-right-enter-active,
+.eh-slide-right-leave-active {
+	transition: transform 0.28s ease, opacity 0.28s ease;
+}
+.eh-slide-left-enter-from,
+.eh-slide-right-leave-to {
+	transform: translateX(28px);
+	opacity: 0;
+}
+.eh-slide-left-leave-to,
+.eh-slide-right-enter-from {
+	transform: translateX(-28px);
+	opacity: 0;
 }
 </style>

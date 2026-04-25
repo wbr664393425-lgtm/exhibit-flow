@@ -146,6 +146,7 @@ import { computed, reactive, ref } from 'vue';
 import { ElDialog, ElMessage } from 'element-plus';
 import { FancyInput, FancySelect, Btn, MonoLabel, Ic, StepBar } from '/@/components/eh';
 import { SERVICES, INDUSTRIES, DISTRICTS, LEADERS, DEPTS } from '/@/components/eh/mock';
+import { checkConflict, getObj, saveDraft, submitApply, updateAndSubmit, updateDraft } from '/@/api/eh/apply';
 
 const emit = defineEmits<{ (e: 'refresh'): void }>();
 
@@ -153,6 +154,7 @@ const STEPS = ['基本信息', '来访客户', '服务需求', '确认提交'];
 const visible = ref(false);
 const step = ref(1);
 const checking = ref(false);
+const saving = ref(false);
 
 const form = reactive({
 	id: '',
@@ -187,13 +189,78 @@ const conflictText = computed(() =>
 );
 
 function doCheckConflict() {
+	if (!form.startDate || !form.startHour || !form.endHour) {
+		ElMessage.warning('请先选择参观日期和时段');
+		return;
+	}
 	checking.value = true;
-	setTimeout(() => {
-		const conflict = form.startDate === '2026-04-25' && parseInt(form.startHour, 10) < 12;
-		form.conflictResult = conflict ? '2026-04-25 09:00–11:30 已被「华为技术参观」占用' : null;
-		form.conflictChecked = true;
-		checking.value = false;
-	}, 900);
+	checkConflict({
+		date: form.startDate,
+		startHour: form.startHour,
+		endHour: form.endHour,
+	})
+		.then((res: any) => {
+			form.conflictResult = res?.data ?? null;
+		})
+		.catch((e: any) => {
+			ElMessage.error(e?.msg || '冲突检测失败');
+			form.conflictResult = null;
+		})
+		.finally(() => {
+			form.conflictChecked = true;
+			checking.value = false;
+		});
+}
+
+function buildPayload() {
+	return {
+		title: form.title,
+		unit: form.unit,
+		industry: form.industry,
+		district: form.district,
+		applicant: form.applicant,
+		phone: form.phone,
+		dept: form.dept,
+		startDate: form.startDate,
+		startHour: form.startHour,
+		endHour: form.endHour,
+		leader: form.leader,
+		headCount: form.headCount ? Number(form.headCount) : 0,
+		agenda: form.agenda,
+		remark: form.notes,
+		services: [...form.services],
+		visitors: form.visitors.map((item) => ({
+			unit: item.unit,
+			name: item.name,
+			title: item.title,
+			isStrategic: !!item.isStrategic,
+			strategicLevel: item.strategicLevel,
+		})),
+	};
+}
+
+function resetForm() {
+	Object.assign(form, {
+		id: '',
+		title: '',
+		unit: '',
+		industry: INDUSTRIES[0],
+		district: DISTRICTS[0],
+		applicant: '李建国',
+		phone: '13812345678',
+		dept: DEPTS[0],
+		startDate: '2026-05-06',
+		startHour: '09',
+		endHour: '11',
+		leader: LEADERS[0],
+		headCount: '',
+		agenda: '',
+		notes: '',
+		services: [],
+		visitors: [{ unit: '', name: '', title: '', isStrategic: false, strategicLevel: '' }],
+		conflictChecked: false,
+		conflictResult: null,
+	});
 }
 
 const chainText = computed(() => {
@@ -229,31 +296,53 @@ const summary = computed<[string, string][]>(() => [
 	['来访客户', form.visitors.map((v) => `${v.name}/${v.unit}`).join('，')],
 ]);
 
-function openDialog(id?: string) {
+async function openDialog(id?: string) {
 	visible.value = true;
 	step.value = 1;
+	resetForm();
 	form.id = id || '';
 	if (!id) {
+		return;
+	}
+	try {
+		const res = await getObj(id);
+		const raw = res?.data;
+		if (!raw) {
+			ElMessage.error('未找到申请详情');
+			return;
+		}
 		Object.assign(form, {
-			title: '',
-			unit: '',
-			industry: INDUSTRIES[0],
-			district: DISTRICTS[0],
-			applicant: '李建国',
-			phone: '13812345678',
-			dept: DEPTS[0],
-			startDate: '2026-05-06',
-			startHour: '09',
-			endHour: '11',
-			leader: LEADERS[0],
-			headCount: '',
-			agenda: '',
-			notes: '',
-			services: [],
-			visitors: [{ unit: '', name: '', title: '', isStrategic: false, strategicLevel: '' }],
+			id: String(raw.id || ''),
+			title: raw.subject || '',
+			unit: raw.visitorCompany || '',
+			industry: raw.industry || INDUSTRIES[0],
+			district: raw.district || DISTRICTS[0],
+			applicant: raw.applicant || '',
+			phone: raw.phone || '',
+			dept: raw.applicantDept || DEPTS[0],
+			startDate: raw.startTime ? String(raw.startTime).slice(0, 10) : '',
+			startHour: raw.startTime ? String(raw.startTime).slice(11, 13) : '09',
+			endHour: raw.endTime ? String(raw.endTime).slice(11, 13) : '11',
+			leader: raw.topLeaderTitle || LEADERS[0],
+			headCount: raw.visitorCount || '',
+			agenda: raw.agenda || '',
+			notes: raw.remark || '',
+			services: raw.extraServices ? String(raw.extraServices).split(',').filter(Boolean) : [],
+			visitors:
+				raw.visitors?.length > 0
+					? raw.visitors.map((item: any) => ({
+							unit: item.unit || item.visitorCompany || '',
+							name: item.name || '',
+							title: item.title || '',
+							isStrategic: item.isKeyCustomer === '1',
+							strategicLevel: item.keyCustomerLevel || '',
+					  }))
+					: [{ unit: '', name: '', title: '', isStrategic: false, strategicLevel: '' }],
 			conflictChecked: false,
 			conflictResult: null,
 		});
+	} catch (e: any) {
+		ElMessage.error(e?.msg || '加载申请详情失败');
 	}
 }
 
@@ -272,13 +361,53 @@ function onNext() {
 	}
 	step.value += 1;
 }
-function onDraft() {
-	ElMessage.info('草稿已保存');
+async function onDraft() {
+	if (!form.title || !form.unit || !form.startDate) {
+		ElMessage.warning('请至少填写主题、来访单位和日期后再保存草稿');
+		return;
+	}
+	saving.value = true;
+	try {
+		const payload = buildPayload();
+		if (form.id) {
+			await updateDraft(form.id, payload);
+		} else {
+			await saveDraft(payload);
+		}
+		ElMessage.success('草稿已保存');
+		visible.value = false;
+		emit('refresh');
+	} catch (e: any) {
+		ElMessage.error(e?.msg || '保存草稿失败');
+	} finally {
+		saving.value = false;
+	}
 }
-function onSubmit() {
-	ElMessage.success(`申请「${form.title}」已提交，等待审批`);
-	visible.value = false;
-	emit('refresh');
+async function onSubmit() {
+	if (!form.title || !form.unit || !form.startDate || !form.applicant || !form.phone) {
+		ElMessage.error('请完善必填信息后再提交');
+		return;
+	}
+	if (!form.visitors.every((v) => v.name && v.unit)) {
+		ElMessage.error('请完善来访客户信息');
+		return;
+	}
+	saving.value = true;
+	try {
+		const payload = buildPayload();
+		if (form.id) {
+			await updateAndSubmit(form.id, payload);
+		} else {
+			await submitApply(payload);
+		}
+		ElMessage.success(`申请「${form.title}」已提交，等待审批`);
+		visible.value = false;
+		emit('refresh');
+	} catch (e: any) {
+		ElMessage.error(e?.msg || '提交申请失败');
+	} finally {
+		saving.value = false;
+	}
 }
 
 defineExpose({ openDialog });

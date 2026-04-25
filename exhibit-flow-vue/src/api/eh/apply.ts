@@ -61,3 +61,59 @@ export const submitApprovalAction = (data: Object) => {
 		data,
 	});
 };
+
+export const checkConflict = (params: { date: string; startHour: string; endHour: string }) => {
+	return request({
+		url: '/admin/eh/apply/conflict',
+		method: 'get',
+		params,
+	});
+};
+
+export const saveDraft = (data: Object) => {
+	return request({
+		url: '/admin/eh/apply/draft',
+		method: 'post',
+		data,
+	});
+};
+
+export const submitApply = (data: Object) => {
+	return request({
+		url: '/admin/eh/apply/submit',
+		method: 'post',
+		data,
+	});
+};
+
+export const updateDraft = (id: string, data: Object) => {
+	return request({
+		url: `/admin/eh/apply/${id}/draft`,
+		method: 'put',
+		data,
+	});
+};
+
+export const updateAndSubmit = (id: string, data: Object) => {
+	return request({
+		url: `/admin/eh/apply/${id}/submit`,
+		method: 'put',
+		data,
+	});
+};
+
+export const cancelApply = (id: string, data: { reason?: string }) => {
+	return request({
+		url: `/admin/eh/apply/${id}/cancel`,
+		method: 'put',
+		data,
+	});
+};
+
+export const rescheduleApply = (id: string, data: Object) => {
+	return request({
+		url: `/admin/eh/apply/${id}/reschedule`,
+		method: 'put',
+		data,
+	});
+};

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.datatype.jsr310.ser.*;
 import java.io.Serial;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 /**
  * Java 8 时间默认序列化模块
@@ -58,8 +59,12 @@ public class PigJavaTimeModule extends SimpleModule {
 		this.addSerializer(Duration.class, DurationSerializer.INSTANCE);
 
 		// ======================= 时间反序列化规则 ==============================
-		// yyyy-MM-dd HH:mm:ss
-		this.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DatePattern.NORM_DATETIME_FORMATTER));
+		// 同时支持 "yyyy-MM-dd HH:mm:ss" 和 ISO 8601 "yyyy-MM-dd'T'HH:mm:ss"
+		DateTimeFormatter flexibleLocalDateTimeFormatter = new DateTimeFormatterBuilder()
+			.appendOptional(DatePattern.NORM_DATETIME_FORMATTER)
+			.appendOptional(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+			.toFormatter();
+		this.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(flexibleLocalDateTimeFormatter));
 		// yyyy-MM-dd
 		this.addDeserializer(LocalDate.class, new LocalDateDeserializer(DateTimeFormatter.ISO_LOCAL_DATE));
 		// HH:mm:ss

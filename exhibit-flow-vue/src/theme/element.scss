@@ -384,3 +384,191 @@ svg {
 	display: inline;
 	vertical-align: baseline;
 }
+
+/* =============================================
+   H5 风格对齐覆写（exhibit-flow 设计系统）
+   ============================================= */
+
+/* Table 表格 */
+.el-table {
+	--el-table-border-color: var(--t-border);
+	--el-table-header-bg-color: var(--t-bg);
+	--el-table-header-text-color: var(--t-text3);
+	--el-table-row-hover-bg-color: var(--t-surface-warm);
+	--el-table-tr-bg-color: var(--t-surface);
+	--el-table-fixed-box-shadow: none;
+	background: var(--t-surface);
+	font-size: 13px;
+	color: var(--t-text1);
+
+	.el-table__header th.el-table__cell {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		background: var(--t-bg);
+		color: var(--t-text3);
+	}
+
+	// 关闭斑马纹（颜色统一）
+	&.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
+		background: var(--t-surface);
+	}
+}
+
+/* Button 按钮 */
+.el-button {
+	border-radius: 4px;
+	font-weight: 600;
+	font-size: 13px;
+	font-family: var(--t-font-sans);
+}
+.el-button--primary {
+	--el-button-bg-color: var(--t-text1);
+	--el-button-border-color: var(--t-text1);
+	--el-button-hover-bg-color: #2d2d2b;
+	--el-button-hover-border-color: #2d2d2b;
+	--el-button-active-bg-color: #000000;
+	--el-button-active-border-color: #000000;
+}
+.el-button--danger {
+	--el-button-bg-color: var(--t-danger);
+	--el-button-border-color: var(--t-danger);
+}
+.el-button--success {
+	--el-button-bg-color: var(--t-success);
+	--el-button-border-color: var(--t-success);
+}
+
+/* Dialog 弹窗 */
+.el-dialog {
+	border-radius: 12px;
+
+	.el-dialog__header {
+		border-bottom: 1px solid var(--t-border);
+		padding-bottom: 16px;
+		margin-right: 0;
+	}
+	.el-dialog__title {
+		font-size: 15px;
+		font-weight: 700;
+		color: var(--t-text1);
+		font-family: var(--t-font-sans);
+	}
+	.el-dialog__footer {
+		border-top: 1px solid var(--t-border);
+		padding-top: 16px;
+	}
+}
+.el-overlay {
+	background: rgba(0, 0, 0, 0.4);
+}
+
+/* Form 表单 & Input 输入框 */
+.el-form-item__label {
+	font-size: 12px;
+	color: var(--t-text2);
+	font-weight: 600;
+	font-family: var(--t-font-sans);
+}
+.el-input__wrapper {
+	border-radius: 4px;
+	box-shadow: 0 0 0 1px var(--t-border) inset;
+
+	&:hover {
+		box-shadow: 0 0 0 1px var(--t-border-dark) inset;
+	}
+	&.is-focus {
+		box-shadow: 0 0 0 1.5px var(--t-text1) inset !important;
+	}
+}
+.el-textarea__inner {
+	border-radius: 4px;
+	box-shadow: 0 0 0 1px var(--t-border) inset;
+	font-family: var(--t-font-sans);
+
+	&:focus {
+		box-shadow: 0 0 0 1.5px var(--t-text1) inset;
+	}
+}
+.el-select .el-input__wrapper {
+	border-radius: 4px;
+}
+
+/* Pagination 分页 */
+.el-pagination {
+	--el-pagination-button-color: var(--t-text2);
+	--el-pagination-hover-color: var(--t-text1);
+
+	.el-pager li {
+		border-radius: 4px;
+		font-size: 13px;
+		font-weight: 600;
+	}
+}
+.el-pagination.is-background .el-pager li.is-active {
+	background-color: var(--t-text1) !important;
+	color: #fff !important;
+	border-radius: 4px;
+}
+
+/* Tag 标签 */
+.el-tag {
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+/* Card 卡片 */
+.el-card {
+	border-radius: 8px;
+	border: 1px solid var(--t-border);
+	box-shadow: none;
+
+	&:hover {
+		box-shadow: none;
+	}
+}
+.el-card__header {
+	border-bottom: 1px solid var(--t-border);
+}
+
+/* Dropdown 下拉 */
+.el-dropdown-menu {
+	border: 1px solid var(--t-border);
+	border-radius: 8px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+
+	.el-dropdown-menu__item {
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--t-text1);
+	}
+}
+
+/* Select 下拉面板 */
+.el-select__popper.el-popper {
+	border: 1px solid var(--t-border) !important;
+	border-radius: 8px !important;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+}
+.el-select-dropdown__item {
+	font-size: 13px;
+	font-weight: 500;
+
+	&.is-selected {
+		color: var(--t-text1);
+		font-weight: 700;
+	}
+}
+
+/* Message 消息提示 */
+.el-message {
+	border-radius: 8px;
+	border: 1px solid var(--t-border);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+	font-family: var(--t-font-sans);
+	font-size: 13px;
+}

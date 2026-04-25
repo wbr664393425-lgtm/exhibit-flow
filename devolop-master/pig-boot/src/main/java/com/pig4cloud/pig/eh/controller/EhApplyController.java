@@ -26,9 +26,13 @@ import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
 import com.pig4cloud.pig.eh.dto.ApprovalActionDTO;
+import com.pig4cloud.pig.eh.dto.ApplyFormDTO;
+import com.pig4cloud.pig.eh.dto.ApplyRescheduleDTO;
 import com.pig4cloud.pig.eh.entity.EhApply;
 import com.pig4cloud.pig.eh.service.EhAdminAggregateService;
 import com.pig4cloud.pig.eh.service.EhApplyService;
+import com.pig4cloud.pig.eh.vo.EhCalendarExportVO;
+import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,10 +40,17 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -60,9 +71,9 @@ public class EhApplyController {
 
 	@GetMapping("/details/{id}")
 	@HasPermission("eh_apply_view")
-	@Operation(summary = "查看详情")
+	@Operation(summary = "查看聚合详情")
 	public R getById(@PathVariable("id") Long id) {
-		return R.ok(ehApplyService.getById(id));
+		return R.ok(ehApplyService.getApplyDetail(id));
 	}
 
 	@PostMapping
@@ -73,12 +84,60 @@ public class EhApplyController {
 		return R.ok(ehApplyService.save(entity));
 	}
 
+	@PostMapping("/draft")
+	@SysLog("保存展厅申请草稿")
+	@HasPermission("eh_apply_add")
+	@Operation(summary = "新建草稿")
+	public R saveDraft(@RequestBody ApplyFormDTO dto) {
+		return R.ok(ehApplyService.saveDraft(dto));
+	}
+
+	@PostMapping("/submit")
+	@SysLog("提交展厅申请")
+	@HasPermission("eh_apply_add")
+	@Operation(summary = "新建并提交")
+	public R submit(@RequestBody ApplyFormDTO dto) {
+		return R.ok(ehApplyService.submitApply(dto));
+	}
+
 	@PutMapping
 	@SysLog("修改展厅申请")
 	@HasPermission("eh_apply_edit")
 	@Operation(summary = "修改展厅申请")
 	public R update(@RequestBody EhApply entity) {
 		return R.ok(ehApplyService.updateById(entity));
+	}
+
+	@PutMapping("/{id}/draft")
+	@SysLog("更新展厅申请草稿")
+	@HasPermission("eh_apply_edit")
+	@Operation(summary = "更新草稿")
+	public R updateDraft(@PathVariable Long id, @RequestBody ApplyFormDTO dto) {
+		return R.ok(ehApplyService.updateDraft(id, dto));
+	}
+
+	@PutMapping("/{id}/submit")
+	@SysLog("更新并提交展厅申请")
+	@HasPermission("eh_apply_edit")
+	@Operation(summary = "更新后提交")
+	public R updateAndSubmit(@PathVariable Long id, @RequestBody ApplyFormDTO dto) {
+		return R.ok(ehApplyService.updateAndSubmit(id, dto));
+	}
+
+	@PutMapping("/{id}/cancel")
+	@SysLog("取消展厅申请")
+	@HasPermission("eh_apply_edit")
+	@Operation(summary = "取消申请")
+	public R cancel(@PathVariable Long id, @RequestBody(required = false) CancelRequest request) {
+		return R.ok(ehApplyService.cancelApply(id, request == null ? null : request.getReason()));
+	}
+
+	@PutMapping("/{id}/reschedule")
+	@SysLog("改期展厅申请")
+	@HasPermission("eh_apply_edit")
+	@Operation(summary = "改期申请")
+	public R reschedule(@PathVariable Long id, @RequestBody ApplyRescheduleDTO dto) {
+		return R.ok(ehApplyService.rescheduleApply(id, dto));
 	}
 
 	@DeleteMapping
@@ -91,37 +150,23 @@ public class EhApplyController {
 
 	@GetMapping("/conflict")
 	@Operation(summary = "时段冲突检测（返回冲突申请描述，无冲突返回 null）")
-	public R checkConflict(
-		@RequestParam String date,
-		@RequestParam String startHour,
-		@RequestParam String endHour
-	) {
+	public R checkConflict(@RequestParam String date, @RequestParam String startHour, @RequestParam String endHour) {
 		return R.ok(ehApplyService.checkConflict(date, startHour, endHour));
 	}
 
 	@GetMapping("/calendar")
-	@Operation(summary = "排期日历（返回待审批和已通过的申请）")
-	public R calendar() {
-		List<EhApply> list = ehApplyService.list(
-			Wrappers.<EhApply>lambdaQuery()
-				.in(EhApply::getStatus, "1", "2")
-				.orderByAsc(EhApply::getStartTime)
-		);
-		List<CalendarVO> vos = list.stream().map(a -> {
-			CalendarVO vo = new CalendarVO();
-			vo.setId(String.valueOf(a.getId()));
-			vo.setTitle(a.getSubject());
-			if (a.getStartTime() != null) {
-				vo.setStart(a.getStartTime().toLocalDate().toString());
-				vo.setStartTime(String.format("%02d:%02d", a.getStartTime().getHour(), a.getStartTime().getMinute()));
-			}
-			if (a.getEndTime() != null) {
-				vo.setEnd(String.format("%02d:%02d", a.getEndTime().getHour(), a.getEndTime().getMinute()));
-			}
-			vo.setStatus("2".equals(a.getStatus()) ? "approved" : "pending");
-			return vo;
-		}).collect(Collectors.toList());
-		return R.ok(vos);
+	@Operation(summary = "排期日历")
+	public R calendar(@RequestParam(required = false) String start, @RequestParam(required = false) String end) {
+		return R.ok(ehApplyService.listCalendarEvents(start, end));
+	}
+
+	@ResponseExcel
+	@GetMapping("/calendar/export")
+	@HasPermission("eh_apply_export")
+	@Operation(summary = "导出排期日历")
+	public List<EhCalendarExportVO> exportCalendar(@RequestParam(required = false) String start,
+		@RequestParam(required = false) String end) {
+		return ehApplyService.listCalendarExportRows(start, end);
 	}
 
 	@GetMapping("/page/aggregate")
@@ -150,13 +195,8 @@ public class EhApplyController {
 	}
 
 	@Data
-	static class CalendarVO {
-		private String id;
-		private String title;
-		private String start;
-		private String startTime;
-		private String end;
-		private String status;
+	static class CancelRequest {
+		private String reason;
 	}
 
 }

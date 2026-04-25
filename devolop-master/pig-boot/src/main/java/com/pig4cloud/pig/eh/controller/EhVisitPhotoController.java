@@ -25,6 +25,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
+import com.pig4cloud.pig.eh.dto.VisitPhotoBatchDTO;
 import com.pig4cloud.pig.eh.entity.EhVisitPhoto;
 import com.pig4cloud.pig.eh.service.EhAdminAggregateService;
 import com.pig4cloud.pig.eh.service.EhVisitPhotoService;
@@ -66,6 +67,14 @@ public class EhVisitPhotoController {
 	@Operation(summary = "新增现场照片")
 	public R save(@RequestBody EhVisitPhoto entity) {
 		return R.ok(ehVisitPhotoService.save(entity));
+	}
+
+	@PostMapping("/batch")
+	@SysLog("批量保存现场照片")
+	@HasPermission("eh_visit_photo_add")
+	@Operation(summary = "批量保存现场照片")
+	public R batchSave(@RequestBody VisitPhotoBatchDTO dto) {
+		return R.ok(ehAdminAggregateService.saveVisitPhotos(dto));
 	}
 
 	@PutMapping

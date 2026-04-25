@@ -97,6 +97,21 @@
 					<Ic :n="currentAction === 'approve' ? 'checkCircle' : 'alertTri'" :size="13" :color="currentAction === 'approve' ? 'var(--t-success)' : 'var(--t-danger)'" />
 					<span>{{ currentAction === 'approve' ? '通过后将自动流转至下一级，申请人收到站内通知。' : currentAction === 'reject' ? '驳回后申请人可查看原因并重新提交。' : '请选择目标审批人。' }}</span>
 				</div>
+				<div v-if="currentAction === 'forward'">
+					<MonoLabel :style="{ display: 'block', marginBottom: '6px' }">目标审批人</MonoLabel>
+					<el-select
+						v-model="targetApprover"
+						filterable
+						remote
+						clearable
+						style="width:100%"
+						placeholder="输入用户名搜索"
+						:remote-method="queryApprovers"
+						:loading="approverLoading"
+					>
+						<el-option v-for="item in approverOptions" :key="item.value" :label="item.label" :value="item.value" />
+					</el-select>
+				</div>
 				<FancyInput :label="currentAction === 'reject' ? '驳回原因' : '审批意见'" :required="currentAction === 'reject'">
 					<textarea v-model="actionComment" :placeholder="currentAction === 'approve' ? '审批意见（选填）' : '请说明原因（必填）'" class="eh-input__field eh-input__field--textarea" rows="4" />
 				</FancyInput>
@@ -105,7 +120,7 @@
 				<Btn variant="ghost" @click="actionVisible = false" style="margin-right:8px">取消</Btn>
 				<Btn
 					:variant="currentAction === 'approve' ? 'success' : currentAction === 'reject' ? 'danger' : 'primary'"
-					:disabled="currentAction === 'reject' && !actionComment.trim()"
+					:disabled="(currentAction === 'reject' && !actionComment.trim()) || (currentAction === 'forward' && !targetApprover)"
 					@click="submitAction"
 				>
 					{{ currentAction === 'approve' ? '确认通过' : currentAction === 'reject' ? '确认驳回' : '确认转交' }}
@@ -117,9 +132,10 @@
 
 <script lang="ts" name="ehapproval" setup>
 import { computed, onMounted, ref } from 'vue';
-import { ElDialog, ElMessage } from 'element-plus';
+import { ElDialog, ElMessage, ElOption, ElSelect } from 'element-plus';
 import { Card, Btn, Badge, Ic, MonoLabel, ApprovalTimeline, FancyInput } from '/@/components/eh';
 import { fetchTodoList, submitAction as submitApprovalAction } from '/@/api/eh/approval';
+import { pageList } from '/@/api/admin/user';
 import type { Application } from '/@/components/eh/mock';
 
 const apps = ref<Application[]>([]);
@@ -128,6 +144,9 @@ const sel = ref<Application | null>(null);
 const actionVisible = ref(false);
 const currentAction = ref<'approve' | 'reject' | 'forward'>('approve');
 const actionComment = ref('');
+const targetApprover = ref('');
+const approverLoading = ref(false);
+const approverOptions = ref<{ label: string; value: string }[]>([]);
 
 onMounted(() => {
 	loadData();
@@ -223,18 +242,39 @@ function kvRows(a: Application) {
 function onAction(t: 'approve' | 'reject' | 'forward') {
 	currentAction.value = t;
 	actionComment.value = '';
+	targetApprover.value = '';
 	actionVisible.value = true;
+	if (t === 'forward') {
+		queryApprovers('');
+	}
+}
+
+async function queryApprovers(keyword: string) {
+	approverLoading.value = true;
+	try {
+		const res = await pageList({ current: 1, size: 20, username: keyword });
+		const records = res?.data?.records || [];
+		approverOptions.value = records.map((item: any) => ({
+			label: item.name ? `${item.username} · ${item.name}` : item.username,
+			value: item.username,
+		}));
+	} catch (e: any) {
+		ElMessage.error(e?.msg || '加载审批人失败');
+	} finally {
+		approverLoading.value = false;
+	}
 }
 async function submitAction() {
 	if (!sel.value) return;
 	try {
-		const node = sel.value.approvalNodes.find((n) => n.action === 'pending' || n.action === 'waiting');
+		const node = sel.value.approvalNodes.find((n: any) => n.action === 'pending' || n.status === 'pending');
 		await submitApprovalAction({
 			// Keep original ID precision (snowflake IDs may exceed JS safe integer range).
 			applyId: sel.value.id.replace('EH-', ''),
 			nodeId: node ? (node as any).id : undefined,
 			action: currentAction.value,
 			comment: actionComment.value,
+			targetApprover: targetApprover.value || undefined,
 		});
 		const name = sel.value.title;
 		actionVisible.value = false;

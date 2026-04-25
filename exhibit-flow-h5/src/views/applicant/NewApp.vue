@@ -167,26 +167,14 @@
 import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { FancyInput, FancySelect, Btn, Ic, StepBar } from '../../components/eh';
-import { INDUSTRIES, DISTRICTS, DEPTS } from '../../mock/applications';
-import { checkTimeConflict, submitApplication } from '../../api/eh/apply';
+import { INDUSTRIES, DISTRICTS } from '../../mock/applications';
+import { checkTimeConflict, saveDraftApplication, submitApplication } from '../../api/eh/apply';
 
 const router = useRouter();
 
 const dateInputRef = ref<HTMLInputElement | null>(null);
 
-function parseLocalYmd(ymd: string): Date | null {
-  if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
-  const [y, m, d] = ymd.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
 const displayDateLabel = computed(() => form.startDate || '选择参观日期');
-
-const dateWeekday = computed(() => {
-  const dt = parseLocalYmd(form.startDate);
-  if (!dt) return '';
-  return new Intl.DateTimeFormat('zh-CN', { weekday: 'short' }).format(dt);
-});
 
 /** 禁止选择过去的日期（本地日界线） */
 const minSelectableDate = computed(() => {
@@ -343,12 +331,20 @@ function onNext() {
   }
   step.value += 1;
 }
-function onSaveDraft() { notify('草稿已保存', 'info'); }
+async function onSaveDraft() {
+  try {
+    await saveDraftApplication({ ...form });
+    notify('草稿已保存', 'info');
+    setTimeout(() => router.replace('/mine'), 400);
+  } catch (e) {
+    notify('草稿保存失败，请重试', 'error');
+  }
+}
 async function onSubmit() {
   submitting.value = true;
   try {
-    const app = await submitApplication({ ...form });
-    notify(`申请「${app.title}」已提交，等待审批`, 'success');
+    await submitApplication({ ...form });
+    notify(`申请「${form.title}」已提交，等待审批`, 'success');
     setTimeout(() => router.replace('/mine'), 600);
   } catch (e) {
     notify('提交失败，请重试', 'error');

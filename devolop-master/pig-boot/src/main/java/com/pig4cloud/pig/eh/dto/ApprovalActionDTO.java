@@ -18,4 +18,7 @@ public class ApprovalActionDTO {
 
 	@Schema(description = "审批意见")
 	private String comment;
+
+	@Schema(description = "转交目标审批人用户名")
+	private String targetApprover;
 }

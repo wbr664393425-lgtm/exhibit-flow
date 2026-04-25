@@ -42,7 +42,8 @@ server:
 file:
   local:
     enable: true
-    base-path: ./upload
+    # 使用绝对路径，避免 IDE/启动目录变化导致落到 target/classes/upload
+    base-path: /Users/wbr/Documents/project/exhibit-flow/devolop-master/upload
 
 ## 登录配置
 security:

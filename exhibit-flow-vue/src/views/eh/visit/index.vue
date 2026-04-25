@@ -86,10 +86,13 @@
 				</div>
 				<div>
 					<MonoLabel :style="{ display: 'block', marginBottom: '8px' }">现场照片</MonoLabel>
-					<div class="eh-visit__upload" @click="ElMessage.info('请选择照片（演示模式）')">
+					<div class="eh-visit__upload" @click="openRecordFilePicker">
 						<Ic n="upload" :size="22" color="var(--t-text2)" />
 						<div style="font-size:12px;color:var(--t-text2);font-weight:500;margin-top:6px">点击上传或拍摄照片，支持多张</div>
 						<MonoLabel :style="{ marginTop: '4px' }">JPG / PNG · 单张 ≤ 10 MB</MonoLabel>
+					</div>
+					<div v-if="recordFiles.length" style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+						<MonoLabel v-for="file in recordFiles" :key="file.name + file.size">{{ file.name }} · {{ Math.round(file.size / 1024) }}KB</MonoLabel>
 					</div>
 				</div>
 				<FancyInput label="备注" type="textarea" v-model="recordForm.notes" placeholder="参观情况说明、客户反馈等" />
@@ -121,6 +124,8 @@
 				<Btn variant="success" icon="checkSquare" @click="submitReturn">确认签收</Btn>
 			</template>
 		</el-dialog>
+
+		<input ref="recordFileInputRef" type="file" accept="image/*" multiple style="display:none" @change="onRecordFileChange" />
 	</div>
 </template>
 
@@ -129,12 +134,16 @@ import { onMounted, reactive, ref } from 'vue';
 import { ElDialog, ElMessage } from 'element-plus';
 import { Card, Btn, Badge, Ic, MonoLabel, FancyInput } from '/@/components/eh';
 import { fetchAggregateList, submitReturnSign, upsertRecord } from '/@/api/eh/visit';
+import { saveBatchPhotos } from '/@/api/eh/visit-photo';
+import request from '/@/utils/request';
 import type { Application } from '/@/components/eh/mock';
 
 const apps = ref<Application[]>([]);
 const sel = ref<Application | null>(null);
 const recordVisible = ref(false);
 const returnVisible = ref(false);
+const recordFileInputRef = ref<HTMLInputElement>();
+const recordFiles = ref<File[]>([]);
 
 const recordForm = reactive({ headCount: '' as string | number, oppCode: '', actualStart: '', actualEnd: '', notes: '' });
 const returnForm = reactive({ person: '', time: '' });
@@ -154,6 +163,13 @@ function mapStatus(status?: string): Application['status'] {
 function fmtTime(v?: string) {
 	if (!v) return '';
 	return v.replace('T', ' ').slice(0, 16);
+}
+
+function toDateTimeString(value?: string) {
+	if (!value) return '';
+	const normalized = value.replace('T', ' ').trim();
+	if (!normalized) return '';
+	return normalized.length === 16 ? `${normalized}:00` : normalized;
 }
 
 function toApp(raw: any): Application {
@@ -209,6 +225,7 @@ function openRecord(app: Application) {
 	recordForm.actualStart = app.visitRecord?.actualStart ?? app.startTime;
 	recordForm.actualEnd = app.visitRecord?.actualEnd ?? app.endTime;
 	recordForm.notes = '';
+	recordFiles.value = [];
 	recordVisible.value = true;
 }
 function openReturn(app: Application) {
@@ -221,12 +238,25 @@ async function submitRecord() {
 	if (!sel.value) return;
 	try {
 		await upsertRecord({
-			applyId: Number(sel.value.id.replace('EH-', '')),
+			applyId: sel.value.id.replace('EH-', ''),
 			actualVisitCount: Number(recordForm.headCount || 0),
 			opportunityCode: recordForm.oppCode,
-			actualVisitTime: (recordForm.actualStart || '').replace(' ', 'T') + ':00',
+			actualVisitTime: toDateTimeString(recordForm.actualStart),
 			remark: recordForm.notes,
 		});
+		await loadData();
+		const current = (apps.value as any[]).find((item) => item.id === sel.value?.id);
+		const visitRecordId = current?.visitRecordId;
+		if (visitRecordId && recordFiles.value.length > 0) {
+			const photos = [];
+			for (const file of recordFiles.value) {
+				photos.push(await uploadFile(file));
+			}
+			await saveBatchPhotos({
+				visitId: visitRecordId,
+				photos,
+			});
+		}
 		recordVisible.value = false;
 		ElMessage.success('参观留存已提交');
 		await loadData();
@@ -242,7 +272,7 @@ async function submitReturn() {
 		await submitReturnSign({
 			visitRecordId,
 			returnSigner: returnForm.person,
-			returnTime: `${sel.value.startTime.split(' ')[0]}T${returnForm.time}:00`,
+			returnTime: toDateTimeString(`${sel.value.startTime.split(' ')[0]} ${returnForm.time}`),
 		});
 		returnVisible.value = false;
 		ElMessage.success('归还签收已记录');
@@ -250,6 +280,33 @@ async function submitReturn() {
 	} catch (e: any) {
 		ElMessage.error(e?.msg || '签收失败');
 	}
+}
+
+function onRecordFileChange(event: Event) {
+	const input = event.target as HTMLInputElement;
+	recordFiles.value = Array.from(input.files || []);
+}
+
+function openRecordFilePicker() {
+	recordFileInputRef.value?.click();
+}
+
+async function uploadFile(file: File) {
+	const formData = new FormData();
+	formData.append('file', file);
+	const res = await request({
+		url: '/admin/sys-file/upload',
+		method: 'post',
+		data: formData,
+		headers: {
+			'Content-Type': 'multipart/form-data',
+		},
+	});
+	return {
+		fileUrl: res?.data?.url,
+		fileName: file.name,
+		fileSize: file.size,
+	};
 }
 </script>
 

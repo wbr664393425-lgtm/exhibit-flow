@@ -2,6 +2,7 @@ package com.pig4cloud.pig.eh.service;
 
 import com.pig4cloud.pig.eh.dto.ApprovalActionDTO;
 import com.pig4cloud.pig.eh.dto.ReturnSignDTO;
+import com.pig4cloud.pig.eh.dto.VisitPhotoBatchDTO;
 import com.pig4cloud.pig.eh.dto.VisitRecordUpsertDTO;
 import com.pig4cloud.pig.eh.vo.AdminApplyPageVO;
 import com.pig4cloud.pig.eh.vo.AdminChangeLogVO;
@@ -30,4 +31,6 @@ public interface EhAdminAggregateService {
 	boolean signVisitReturn(ReturnSignDTO dto);
 
 	boolean approveOrRejectOrTransfer(ApprovalActionDTO dto);
+
+	boolean saveVisitPhotos(VisitPhotoBatchDTO dto);
 }

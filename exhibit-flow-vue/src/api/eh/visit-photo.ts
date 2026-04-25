@@ -45,3 +45,11 @@ export const fetchAggregateList = () => {
 		method: 'get',
 	});
 };
+
+export const saveBatchPhotos = (data: Object) => {
+	return request({
+		url: '/admin/eh/visit/photo/batch',
+		method: 'post',
+		data,
+	});
+};

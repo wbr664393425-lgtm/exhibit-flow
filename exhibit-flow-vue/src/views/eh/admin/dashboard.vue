@@ -160,7 +160,15 @@
 				Word 预览（poi-tl 按原模板回填生成存档版申请单）
 			</div>
 			<template #footer>
-				<Btn variant="outline" size="sm" icon="download" @click="exportVisible = false">下载 {{ exportTab === 'excel' ? 'Excel' : 'Word' }}</Btn>
+				<Btn
+					variant="outline"
+					size="sm"
+					icon="download"
+					:disabled="exportTab === 'docx'"
+					@click="exportTab === 'excel' ? onExportExcel() : ElMessage.info('Word 导出本轮未开放')"
+				>
+					{{ exportTab === 'excel' ? '下载 Excel' : 'Word 本轮未开放' }}
+				</Btn>
 			</template>
 		</el-dialog>
 	</div>
@@ -171,6 +179,7 @@ import { computed, onMounted, ref } from 'vue';
 import { ElDialog, ElMessage } from 'element-plus';
 import { Card, Btn, Ic, MonoLabel, SVGLineChart } from '/@/components/eh';
 import { fetchKpis, fetchMonthly, fetchCityDist, fetchIndustryDist, fetchStrategic, fetchFunnel } from '/@/api/eh/admin-stats';
+import { downBlobFile } from '/@/utils/other';
 
 const kpis = ref<any[]>([]);
 const monthly = ref<any[]>([]);
@@ -219,7 +228,7 @@ const conversionRate = computed(() => {
 });
 
 function onExportExcel() {
-	ElMessage.info('正在导出省公司报表…');
+	downBlobFile('/admin/eh/stats/export', {}, '省公司报表.xlsx');
 }
 </script>
 
