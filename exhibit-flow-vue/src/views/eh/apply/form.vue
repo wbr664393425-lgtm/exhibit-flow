@@ -179,8 +179,15 @@ const form = reactive({
 
 const dayScheduleHint = computed(() => {
 	if (!daySchedules.value.length) return '';
-	return `当天已有排期：${daySchedules.value.join('；')}。可继续保存。`;
+	return `当天已有排期：${daySchedules.value.join('；')}。仍可继续提交，建议先与负责人联系确认。`;
 });
+
+function formatScheduleHint(item: any) {
+	const start = String(item.startTime || '').replace('T', ' ').slice(11, 16);
+	const end = String(item.endTime || '').replace('T', ' ').slice(11, 16);
+	const timeRange = end ? `${start}-${end}` : start;
+	return [timeRange, item.title || item.subject].filter(Boolean).join(' ').trim();
+}
 
 watch(
 	() => [form.startDate, form.meetingTime] as const,
@@ -193,7 +200,7 @@ watch(
 			const res: any = await fetchAggregateList();
 			daySchedules.value = (res?.data || [])
 				.filter((item: any) => String(item.startTime || '').slice(0, 10) === date && (!form.id || String(item.id) !== form.id))
-				.map((item: any) => `${String(item.startTime || '').replace('T', ' ').slice(11, 16)} ${item.title || item.subject || ''}`)
+				.map(formatScheduleHint)
 				.filter(Boolean);
 		} catch {
 			daySchedules.value = [];
@@ -447,7 +454,7 @@ defineExpose({ openDialog });
 .eh-new__modal-mask {
 	position: fixed;
 	inset: 0;
-	background: rgba(0,0,0,0.45);
+	background: rgba(22, 39, 75, 0.32);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -502,7 +509,7 @@ defineExpose({ openDialog });
 	border: none;
 	border-radius: 6px;
 	background: var(--t-accent);
-	color: #fffaf2;
+	color: #f8fbff;
 	font-size: 14px;
 	font-weight: 600;
 	font-family: inherit;

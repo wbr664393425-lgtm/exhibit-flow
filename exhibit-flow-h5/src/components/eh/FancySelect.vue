@@ -106,14 +106,14 @@ function pick(val: string | number) {
   border-radius: 4px;
   padding: 8px 10px;
   font-size: 16px;
-  background: #fffefa;
+  background: var(--t-surface);
   cursor: pointer;
   box-sizing: border-box;
   transition: border-color 0.15s;
 }
 .eh-select__trigger--open {
-  border-color: var(--t-text1);
-  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
+  border-color: var(--t-accent);
+  box-shadow: 0 0 0 2px rgba(47, 103, 216, 0.12);
 }
 .eh-select__trigger--disabled {
   background: var(--t-bg);
@@ -129,7 +129,7 @@ function pick(val: string | number) {
   white-space: nowrap;
 }
 .eh-select__ph {
-  color: #b0ada6;
+  color: var(--t-text3);
   flex: 1;
 }
 .eh-select__chevron {
@@ -151,7 +151,7 @@ function pick(val: string | number) {
   background: var(--t-surface);
   border: 1px solid var(--t-border);
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 24px rgba(47, 103, 216, 0.14);
   z-index: 100;
   max-height: 220px;
   overflow-y: auto;
@@ -165,7 +165,7 @@ function pick(val: string | number) {
   font-size: 13px;
   color: var(--t-text1);
   cursor: pointer;
-  border-bottom: 1px solid var(--t-surface-warm, #f5f2ed);
+  border-bottom: 1px solid var(--t-surface-warm, #edf4ff);
   transition: background 0.1s;
 }
 .eh-select__opt:last-child {

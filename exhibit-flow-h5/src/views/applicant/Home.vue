@@ -5,7 +5,7 @@
       <div class="eh-home__deco eh-home__deco--a" />
       <div class="eh-home__deco eh-home__deco--b" />
       <button class="eh-home__logout" @click="onLogout">退出登录</button>
-      <MonoLabel :style="{ color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '6px' }">
+      <MonoLabel :style="{ color: 'rgba(248,251,255,0.72)', display: 'block', marginBottom: '6px' }">
         欢迎回来
       </MonoLabel>
       <div class="eh-home__name">{{ displayName }}</div>
@@ -75,7 +75,7 @@ function onLogout() {
   background: var(--t-bg);
 }
 .eh-home__hero {
-  background: var(--t-text1);
+  background: linear-gradient(135deg, var(--t-accent-strong), var(--t-accent));
   padding: 24px 16px 28px;
   position: relative;
   overflow: hidden;
@@ -91,14 +91,14 @@ function onLogout() {
   right: -20px;
   width: 100px;
   height: 100px;
-  background: rgba(255, 86, 0, 0.15);
+  background: rgba(255, 255, 255, 0.14);
 }
 .eh-home__deco--b {
   bottom: -30px;
   right: 30px;
   width: 60px;
   height: 60px;
-  background: rgba(255, 86, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
 .eh-home__logout {
   position: absolute;
@@ -123,7 +123,7 @@ function onLogout() {
 }
 .eh-home__meta {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(248, 251, 255, 0.72);
 }
 .eh-home__body {
   padding: 16px;

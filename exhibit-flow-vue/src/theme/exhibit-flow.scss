@@ -1,20 +1,20 @@
-/* Claude (Anthropic) design tokens for 展厅管理员后台 */
+/* 政企蓝办公风设计令牌（后台统一） */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-	--t-bg: #f5f4ed;
-	--t-surface: #faf9f5;
-	--t-surface-warm: #f0eee6;
-	--t-border: #f0eee6;
-	--t-border-dark: #e8e6dc;
-	--t-text1: #141413;
-	--t-text2: #5e5d59;
-	--t-text3: #87867f;
-	--t-accent: #9a5f35;
-	--t-accent-hover: #8b522a;
-	--t-accent-strong: #74401f;
-	--t-accent-light: #f7efe3;
-	--t-accent-border: #d9c2a7;
+	--t-bg: #f4f8ff;
+	--t-surface: #ffffff;
+	--t-surface-warm: #edf4ff;
+	--t-border: #dde8fa;
+	--t-border-dark: #c5d8f5;
+	--t-text1: #1b2a41;
+	--t-text2: #52627a;
+	--t-text3: #8293ab;
+	--t-accent: #2f67d8;
+	--t-accent-hover: #2457bf;
+	--t-accent-strong: #1c3f95;
+	--t-accent-light: #eaf2ff;
+	--t-accent-border: #bfd4fb;
 	--t-success: #2c6415;
 	--t-success-light: #f0f9eb;
 	--t-warning: #92400e;
@@ -104,9 +104,9 @@
 	&.eh-btn--md { padding: 7px 14px; font-size: 13px; }
 	&.eh-btn--lg { padding: 10px 20px; font-size: 14px; }
 
-	&.eh-btn--primary { background: var(--t-accent); color: #fffaf2; }
+	&.eh-btn--primary { background: var(--t-accent); color: #f8fbff; }
 	&.eh-btn--primary:not(:disabled):hover { background: var(--t-accent-hover); }
-	&.eh-btn--orange { background: var(--t-accent); color: #fff; }
+	&.eh-btn--orange { background: var(--t-accent); color: #f8fbff; }
 	&.eh-btn--orange:not(:disabled):hover { background: #e64d00; }
 	&.eh-btn--secondary { background: var(--t-bg); color: var(--t-text1); border: 1px solid var(--t-border); }
 	&.eh-btn--secondary:not(:disabled):hover { background: var(--t-surface-warm); }

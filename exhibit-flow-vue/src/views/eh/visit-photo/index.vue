@@ -396,7 +396,7 @@ async function uploadFile(file: File) {
 	width: 18px;
 	height: 18px;
 	border-radius: 50%;
-	background: rgba(0, 0, 0, 0.55);
+	background: rgba(47, 103, 216, 0.9);
 	border: 0;
 	display: flex;
 	align-items: center;
@@ -404,6 +404,10 @@ async function uploadFile(file: File) {
 	cursor: pointer;
 	opacity: 0;
 	transition: opacity 0.15s;
+}
+.eh-photo__thumb-del:hover,
+.eh-photo__thumb-download:hover {
+	background: rgba(36, 87, 191, 0.95);
 }
 .eh-photo__thumb-del {
 	right: 3px;
@@ -444,15 +448,15 @@ async function uploadFile(file: File) {
 	cursor: pointer;
 }
 :global(.eh-photo-preview__overlay) {
-	background: rgba(61, 51, 40, 0.32);
+	background: rgba(22, 39, 75, 0.32);
 	backdrop-filter: blur(2px);
 }
 :deep(.eh-photo-preview.el-dialog) {
-	background: #fffaf2;
-	border: 1px solid #eadfce;
+	background: #f8fbff;
+	border: 1px solid #d9e7fb;
 	border-radius: 10px;
 	overflow: hidden;
-	box-shadow: 0 22px 60px rgba(64, 52, 38, 0.26);
+	box-shadow: 0 22px 60px rgba(19, 43, 80, 0.24);
 	padding: 10px;
 }
 :deep(.eh-photo-preview .el-dialog__header) {
@@ -464,8 +468,8 @@ async function uploadFile(file: File) {
 .eh-photo-preview__body {
 	position: relative;
 	min-height: 70vh;
-	background: linear-gradient(180deg, #fbf6ed 0%, #f5eadb 100%);
-	border: 1px solid #eadfce;
+	background: linear-gradient(180deg, #f4f8ff 0%, #edf4ff 100%);
+	border: 1px solid #d9e7fb;
 	border-radius: 8px;
 	display: flex;
 	align-items: center;
@@ -483,20 +487,20 @@ async function uploadFile(file: File) {
 	justify-content: space-between;
 	gap: 12px;
 	padding: 10px 12px;
-	background: rgba(255, 250, 242, 0.9);
-	border: 1px solid rgba(218, 204, 184, 0.9);
+	background: rgba(248, 251, 255, 0.92);
+	border: 1px solid rgba(191, 212, 251, 0.9);
 	border-radius: 8px;
-	box-shadow: 0 8px 24px rgba(91, 73, 50, 0.12);
+	box-shadow: 0 8px 24px rgba(35, 74, 130, 0.14);
 	backdrop-filter: blur(8px);
 }
 .eh-photo-preview__title {
-	color: #2b2722;
+	color: #1b2a41;
 	font-size: 14px;
 	font-weight: 700;
 	margin-bottom: 3px;
 }
 .eh-photo-preview__bar :deep(.eh-mono) {
-	color: #8b7d6d;
+	color: #8293ab;
 }
 .eh-photo-preview__actions {
 	display: flex;
@@ -504,9 +508,9 @@ async function uploadFile(file: File) {
 	gap: 8px;
 }
 .eh-photo-preview__actions :deep(.eh-btn--ghost) {
-	background: #fffdf8;
-	border-color: #decfba;
-	color: #4a4035;
+	background: #ffffff;
+	border-color: #bfd4fb;
+	color: #2a3d63;
 }
 .eh-photo-preview__img {
 	max-width: 100%;
@@ -514,7 +518,7 @@ async function uploadFile(file: File) {
 	object-fit: contain;
 	cursor: pointer;
 	border-radius: 6px;
-	box-shadow: 0 12px 34px rgba(76, 60, 38, 0.18);
+	box-shadow: 0 12px 34px rgba(27, 42, 65, 0.18);
 }
 .eh-photo-preview__nav {
 	position: absolute;
@@ -524,17 +528,17 @@ async function uploadFile(file: File) {
 	height: 64px;
 	border: 0;
 	border-radius: 6px;
-	background: rgba(180, 109, 64, 0.88);
+	background: rgba(47, 103, 216, 0.9);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
 	transform: translateY(-50%);
-	box-shadow: 0 10px 24px rgba(139, 82, 42, 0.22);
+	box-shadow: 0 10px 24px rgba(47, 103, 216, 0.22);
 	transition: background 0.15s ease, transform 0.15s ease;
 }
 .eh-photo-preview__nav:hover {
-	background: rgba(150, 82, 42, 0.95);
+	background: rgba(36, 87, 191, 0.95);
 	transform: translateY(-50%) scale(1.02);
 }
 .eh-photo-preview__nav:disabled {

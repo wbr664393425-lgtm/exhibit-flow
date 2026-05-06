@@ -55,7 +55,7 @@ const colors: Record<string, string> = {
   approved: '#2c6415',
   rejected: '#c41c1c',
   pending: '#f59e0b',
-  waiting: '#dedbd6',
+  waiting: '#c5d8f5',
 };
 </script>
 

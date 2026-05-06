@@ -57,22 +57,22 @@ body,
 		flex: 1;
 	}
 	.layout-aside {
-		background: #fbf6ed;
-		box-shadow: 1px 0 0 #e5d7c3;
+		background: #f2f7ff;
+		box-shadow: 1px 0 0 #d9e7fb;
 		height: inherit;
 		position: relative;
 		z-index: 1;
 		display: flex;
 		flex-direction: column;
 		overflow-x: hidden !important;
-		color: #6a5947;
+		color: #2a3d63;
 		.el-scrollbar__view {
 			overflow: hidden;
 		}
 		.layout-logo {
-			background: #fffaf2;
-			border-bottom: 1px solid #eadfce;
-			color: #5b4633;
+			background: #f8fbff;
+			border-bottom: 1px solid #d9e7fb;
+			color: #1b2a41;
 			box-shadow: none;
 		}
 	}

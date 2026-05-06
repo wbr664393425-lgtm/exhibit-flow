@@ -70,7 +70,7 @@ function onInput(e: Event) {
   font-size: 16px;
   color: var(--t-text1);
   outline: none;
-  background: #fffefa;
+  background: var(--t-surface);
   width: 100%;
   box-sizing: border-box;
   transition: border-color 0.15s;
@@ -83,11 +83,11 @@ function onInput(e: Event) {
 .eh-input__field:focus,
 :slotted(.eh-input__field:focus) {
   border-color: var(--t-text1);
-  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
+  box-shadow: 0 0 0 2px rgba(47, 103, 216, 0.12);
 }
 .eh-input__field::placeholder,
 :slotted(.eh-input__field::placeholder) {
-  color: #b0ada6;
+  color: var(--t-text3);
 }
 .eh-input__field--textarea,
 :slotted(.eh-input__field--textarea) {

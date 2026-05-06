@@ -76,7 +76,7 @@
         </FancyInput>
 
         <div v-if="dayScheduleHint" class="eh-new__notice">
-          <Ic n="info" :size="13" color="#b45309" />
+          <Ic n="info" :size="13" color="var(--t-warning)" />
           <span>{{ dayScheduleHint }}</span>
         </div>
 
@@ -266,8 +266,15 @@ const form = reactive({
 const daySchedules = ref<string[]>([]);
 const dayScheduleHint = computed(() => {
   if (!daySchedules.value.length) return '';
-  return `当天已有排期：${daySchedules.value.join('；')}。可继续提交。`;
+  return `当天已有排期：${daySchedules.value.join('；')}。仍可继续提交，建议先与负责人联系确认。`;
 });
+
+function formatScheduleHint(item: { startTime?: string; endTime?: string; title?: string }) {
+  const start = String(item.startTime || '').replace('T', ' ').slice(11, 16);
+  const end = String(item.endTime || '').replace('T', ' ').slice(11, 16);
+  const timeRange = end ? `${start}-${end}` : start;
+  return [timeRange, item.title].filter(Boolean).join(' ').trim();
+}
 
 watch(
   () => [form.startDate, form.meetingTime] as const,
@@ -279,7 +286,7 @@ watch(
     const schedules = await fetchDaySchedules(date).catch(() => []);
     daySchedules.value = schedules
       .filter((item) => !editId.value || item.id !== editId.value)
-      .map((item) => `${item.startTime.split(' ')[1] || ''} ${item.title}`)
+      .map(formatScheduleHint)
       .filter(Boolean);
   }
 );
@@ -309,7 +316,7 @@ const toastColor = computed(() => {
   if (!toast.value) return 'var(--t-text2)';
   if (toast.value.type === 'success') return 'var(--t-success)';
   if (toast.value.type === 'error') return 'var(--t-danger)';
-  return '#1d4ed8';
+  return 'var(--t-accent)';
 });
 function notify(msg: string, type: Toast['type'] = 'success') {
   toast.value = { msg, type };
@@ -408,7 +415,7 @@ async function onSubmit() {
   position: relative;
   border: 1px solid var(--t-border-dark);
   border-radius: 4px;
-  background: #fffefa;
+  background: var(--t-surface);
   box-sizing: border-box;
   transition: border-color 0.15s ease;
   outline: none;
@@ -417,8 +424,8 @@ async function onSubmit() {
   border-color: var(--t-border-dark);
 }
 .eh-new__date-field:focus-within {
-  border-color: var(--t-text1);
-  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
+  border-color: var(--t-accent);
+  box-shadow: 0 0 0 2px rgba(47, 103, 216, 0.12);
 }
 .eh-new__date-inner {
   display: flex;
@@ -439,7 +446,7 @@ async function onSubmit() {
 .eh-new__date-empty {
   font-size: 16px;
   font-weight: 400;
-  color: #b0ada6;
+  color: var(--t-text3);
 }
 .eh-new__date-meta {
   display: flex;
@@ -505,7 +512,7 @@ async function onSubmit() {
   position: relative;
   border: 1px solid var(--t-border-dark);
   border-radius: 4px;
-  background: #fffefa;
+  background: var(--t-surface);
   box-sizing: border-box;
   transition: border-color 0.15s ease;
   outline: none;
@@ -514,8 +521,8 @@ async function onSubmit() {
   border-color: var(--t-border-dark);
 }
 .eh-new__time-field:focus-within {
-  border-color: var(--t-text1);
-  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
+  border-color: var(--t-accent);
+  box-shadow: 0 0 0 2px rgba(47, 103, 216, 0.12);
 }
 .eh-new__time-inner {
   display: flex;
@@ -536,7 +543,7 @@ async function onSubmit() {
 .eh-new__time-empty {
   font-size: 16px;
   font-weight: 400;
-  color: #b0ada6;
+  color: var(--t-text3);
 }
 .eh-new__time-icon-row {
   display: flex;
@@ -604,7 +611,7 @@ async function onSubmit() {
   padding: 10px 6px;
   border: 1px solid var(--t-border);
   border-radius: 4px;
-  background: #fffefa;
+  background: var(--t-surface);
   cursor: pointer;
   font-family: inherit;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
@@ -613,7 +620,7 @@ async function onSubmit() {
   border-color: var(--t-border-dark);
 }
 .eh-new__slot:focus-visible {
-  outline: 2px solid var(--t-text1);
+  outline: 2px solid var(--t-accent);
   outline-offset: 2px;
 }
 .eh-new__slot-name {
@@ -632,7 +639,7 @@ async function onSubmit() {
 }
 .eh-new__slot--on .eh-new__slot-name,
 .eh-new__slot--on .eh-new__slot-range {
-  color: #fff;
+  color: #f8fbff;
 }
 
 /* 检测中：边框脉冲 */
@@ -647,7 +654,7 @@ async function onSubmit() {
 }
 .eh-new__slot--checking .eh-new__slot-name,
 .eh-new__slot--checking .eh-new__slot-range {
-  color: #fff;
+  color: #f8fbff;
 }
 
 /* 无冲突：绿色 */
@@ -675,7 +682,7 @@ async function onSubmit() {
 .eh-new__modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(22, 39, 75, 0.32);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -692,7 +699,7 @@ async function onSubmit() {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  box-shadow: rgba(47, 103, 216, 0.14) 0px 12px 32px;
 }
 .eh-new__modal-icon {
   width: 52px;
@@ -746,8 +753,8 @@ async function onSubmit() {
   padding: 11px;
   border: none;
   border-radius: 6px;
-  background: var(--t-text1);
-  color: #fff;
+  background: var(--t-accent);
+  color: #f8fbff;
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -831,7 +838,7 @@ async function onSubmit() {
   background: var(--t-surface);
   border-radius: 6px;
   padding: 12px 14px;
-  box-shadow: 0 8px 32px rgba(17, 17, 17, 0.14);
+  box-shadow: 0 8px 32px rgba(47, 103, 216, 0.14);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -842,7 +849,7 @@ async function onSubmit() {
   color: var(--t-text1);
 }
 .eh-toast[data-type='error'] { border-left-color: var(--t-danger); }
-.eh-toast[data-type='info']  { border-left-color: #1d4ed8; }
+.eh-toast[data-type='info']  { border-left-color: var(--t-accent); }
 
 .eh-toast-enter-active,
 .eh-toast-leave-active {
@@ -864,7 +871,7 @@ async function onSubmit() {
   background: var(--t-surface);
   border: 1px solid var(--t-border);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 24px rgba(47, 103, 216, 0.14);
   z-index: 100;
   overflow: hidden;
 }
@@ -875,7 +882,7 @@ async function onSubmit() {
   cursor: pointer;
 }
 .eh-leader-combo__opt:active {
-  background: var(--t-bg);
+  background: var(--t-surface-warm);
 }
 .eh-leader-drop-enter-active {
   transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);

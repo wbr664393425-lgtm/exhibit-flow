@@ -25,6 +25,9 @@ function mapNodeAction(raw: any) {
 }
 
 function toApplication(raw: any): Application {
+  const calendarStartTime = raw.start && raw.startTime ? `${raw.start} ${raw.startTime}` : '';
+  const calendarEndTime = raw.start && raw.end ? `${raw.start} ${raw.end}` : '';
+
   return {
     id: String(raw.id),
     title: raw.subject || '',
@@ -35,15 +38,15 @@ function toApplication(raw: any): Application {
     applicant: raw.applicant || '',
     phone: raw.phone || '',
     dept: raw.applicantDept || '',
-    startTime: fmtDt(raw.startTime),
-    endTime: fmtDt(raw.endTime),
+    startTime: calendarStartTime || fmtDt(raw.startTime),
+    endTime: calendarEndTime || fmtDt(raw.endTime),
     leader: raw.topLeaderTitle || '无',
     headCount: raw.visitorCount || 0,
     customerCount: raw.customerCount ?? raw.visitorCount ?? 0,
     internalCount: raw.internalCount ?? 0,
     agenda: raw.agenda || '',
     services: raw.extraServices ? String(raw.extraServices).split(',').filter(Boolean) : [],
-    status: STATUS_MAP[raw.status] || 'draft',
+    status: STATUS_MAP[raw.status] || raw.status || 'draft',
     created: fmtDt(raw.createTime),
     opportunityCode: raw.opportunityCode || '',
     approvalNodes: (raw.approvalNodes || []).map((n: any) => ({

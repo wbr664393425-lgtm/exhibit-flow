@@ -439,7 +439,7 @@ async function submitAction() {
 	font-size: 11px;
 }
 .eh-aggr__chip-cnt--active {
-	background: #fffaf2;
+	background: #f8fbff;
 	color: var(--t-accent);
 }
 
@@ -591,7 +591,7 @@ async function submitAction() {
 	height: 30px;
 	border-radius: 50%;
 	background: var(--t-accent);
-	color: #fffaf2;
+	color: #f8fbff;
 	display: flex;
 	align-items: center;
 	justify-content: center;

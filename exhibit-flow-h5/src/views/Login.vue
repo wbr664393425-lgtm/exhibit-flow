@@ -4,9 +4,9 @@
     <div class="eh-login__deco eh-login__deco--b" />
     <div class="eh-login__box">
       <div class="eh-login__brand">
-        <div class="eh-login__logo"><Ic n="building" :size="22" color="#c96442" /></div>
+        <div class="eh-login__logo"><Ic n="building" :size="22" color="var(--t-accent)" /></div>
         <h1 class="eh-login__title">展厅申请系统</h1>
-        <MonoLabel :style="{ color: 'var(--t-text3)' }">Exhibit Flow · Applicant</MonoLabel>
+        <MonoLabel :style="{ color: 'var(--t-text3)' }">申请端 · 访问服务</MonoLabel>
       </div>
       <form class="eh-login__form" @submit.prevent="onSubmit">
         <label class="eh-login__field">
@@ -23,7 +23,7 @@
         <p class="eh-login__error" :class="{ 'eh-login__error--show': !!error }">{{ error || ' ' }}</p>
       </form>
     </div>
-    <p class="eh-login__footer">展厅访问管理平台 · H5</p>
+    <p class="eh-login__footer">展厅访问管理平台 · 移动端</p>
   </div>
 </template>
 
@@ -85,14 +85,14 @@ async function onSubmit() {
   left: -30px;
   width: 160px;
   height: 160px;
-  background: rgba(201, 100, 66, 0.10);
+  background: rgba(47, 103, 216, 0.1);
 }
 .eh-login__deco--b {
   bottom: -60px;
   right: -60px;
   width: 220px;
   height: 220px;
-  background: rgba(201, 100, 66, 0.07);
+  background: rgba(47, 103, 216, 0.07);
 }
 .eh-login__box {
   width: 100%;
@@ -102,7 +102,7 @@ async function onSubmit() {
   border: 1px solid var(--t-border-dark);
   border-radius: 16px;
   padding: 32px 28px;
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  box-shadow: rgba(47, 103, 216, 0.12) 0px 12px 32px;
 }
 .eh-login__brand {
   text-align: center;
@@ -154,12 +154,12 @@ async function onSubmit() {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .eh-login__field input:focus {
-  border-color: #3898ec;
-  box-shadow: 0 0 0 3px rgba(56, 152, 236, 0.12);
+  border-color: var(--t-accent);
+  box-shadow: 0 0 0 3px rgba(47, 103, 216, 0.12);
 }
 .eh-login__btn {
   background: var(--t-accent);
-  color: #faf9f5;
+  color: #f8fbff;
   border: none;
   border-radius: 8px;
   padding: 12px;
@@ -175,7 +175,7 @@ async function onSubmit() {
   cursor: not-allowed;
 }
 .eh-login__btn:not(:disabled):hover {
-  background: #b85538;
+  background: var(--t-accent-hover);
 }
 .eh-login__error {
   margin: 4px 0 0;

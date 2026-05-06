@@ -165,7 +165,7 @@
     <!-- toast -->
     <Transition name="eh-toast">
       <div v-if="toast" class="eh-toast" :data-type="toast.type">
-        <Ic :n="toast.type === 'success' ? 'checkCircle' : 'info'" :size="16" :color="toast.type === 'success' ? 'var(--t-success)' : '#1d4ed8'" />
+        <Ic :n="toast.type === 'success' ? 'checkCircle' : 'info'" :size="16" :color="toast.type === 'success' ? 'var(--t-success)' : 'var(--t-accent)'" />
         <span>{{ toast.msg }}</span>
       </div>
     </Transition>
@@ -415,16 +415,16 @@ async function onReschedule() {
 }
 .eh-detail__tab--active {
   background: var(--t-accent);
-  color: #faf9f5;
+  color: #f8fbff;
   border-color: var(--t-accent);
 }
 .eh-detail__status-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #e9cf9f;
-  color: #af6f13;
-  background: #fff6e7;
+  border: 1px solid var(--t-accent-border);
+  color: var(--t-accent);
+  background: var(--t-accent-light);
   padding: 4px 10px;
   border-radius: 6px;
   font-size: 12px;
@@ -434,7 +434,7 @@ async function onReschedule() {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #f4a11a;
+  background: var(--t-accent);
 }
 
 .eh-detail__info-card {
@@ -478,7 +478,7 @@ async function onReschedule() {
 }
 .eh-detail__divider {
   height: 1px;
-  background: #d8d8d8;
+  background: var(--t-border);
   margin: 4px 0;
 }
 .eh-detail__agenda {
@@ -507,7 +507,7 @@ async function onReschedule() {
 .eh-detail__action-bar {
   margin: 8px 18px 16px;
   padding-top: 12px;
-  border-top: 1px solid #d8d8d8;
+  border-top: 1px solid var(--t-border);
   display: flex;
   gap: 8px;
 }
@@ -525,7 +525,7 @@ async function onReschedule() {
 .eh-modal {
   position: fixed;
   inset: 0;
-  background: rgba(17, 17, 17, 0.55);
+  background: rgba(22, 39, 75, 0.32);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -539,7 +539,7 @@ async function onReschedule() {
   max-height: 90vh;
   overflow: auto;
   border: 1px solid var(--t-border);
-  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+  box-shadow: rgba(47, 103, 216, 0.14) 0px 12px 32px;
 }
 .eh-modal__head {
   padding: 16px 20px;
@@ -670,7 +670,7 @@ async function onReschedule() {
   background: var(--t-surface);
   border-radius: 6px;
   padding: 12px 14px;
-  box-shadow: 0 8px 32px rgba(17, 17, 17, 0.14);
+  box-shadow: 0 8px 32px rgba(47, 103, 216, 0.14);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -680,7 +680,7 @@ async function onReschedule() {
   font-size: 13px;
   color: var(--t-text1);
 }
-.eh-toast[data-type='info'] { border-left-color: #1d4ed8; }
+.eh-toast[data-type='info'] { border-left-color: var(--t-accent); }
 .eh-toast-enter-active,
 .eh-toast-leave-active {
   transition: transform 0.2s, opacity 0.2s;

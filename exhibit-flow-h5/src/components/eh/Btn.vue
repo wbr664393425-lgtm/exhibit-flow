@@ -58,11 +58,11 @@ const iconSize = computed(() => (props.size === 'sm' ? 12 : props.size === 'lg' 
 .eh-btn--md { padding: 7px 14px; font-size: 13px; }
 .eh-btn--lg { padding: 10px 20px; font-size: 14px; }
 
-.eh-btn--primary { background: var(--t-text1); color: #fff; }
-.eh-btn--primary:not(:disabled):hover { background: #2d2d2b; }
+.eh-btn--primary { background: var(--t-accent); color: #f8fbff; }
+.eh-btn--primary:not(:disabled):hover { background: var(--t-accent-hover); }
 
-.eh-btn--orange { background: var(--t-accent); color: #fff; }
-.eh-btn--orange:not(:disabled):hover { background: #e64d00; }
+.eh-btn--orange { background: var(--t-accent); color: #f8fbff; }
+.eh-btn--orange:not(:disabled):hover { background: var(--t-accent-hover); }
 
 .eh-btn--secondary { background: var(--t-bg); color: var(--t-text1); border: 1px solid var(--t-border); }
 .eh-btn--secondary:not(:disabled):hover { background: var(--t-surface-warm); }
@@ -76,6 +76,6 @@ const iconSize = computed(() => (props.size === 'sm' ? 12 : props.size === 'lg' 
 .eh-btn--success { background: var(--t-success); color: #fff; }
 .eh-btn--success:not(:disabled):hover { background: #166534; }
 
-.eh-btn--outline { background: transparent; color: var(--t-text1); border: 1px solid var(--t-text1); }
+.eh-btn--outline { background: transparent; color: var(--t-accent); border: 1px solid var(--t-accent-border); }
 .eh-btn--outline:not(:disabled):hover { background: var(--t-bg); }
 </style>

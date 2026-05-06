@@ -150,20 +150,20 @@ async function loadMore() {
   font-family: inherit;
 }
 .eh-mine__chip--active {
-  border-color: var(--t-text1);
-  background: var(--t-text1);
-  color: #fff;
+  border-color: var(--t-accent-border);
+  background: var(--t-accent-light);
+  color: var(--t-accent-strong);
 }
 .eh-mine__chip-cnt {
-  background: #f0ede8;
+  background: var(--t-surface-warm);
   color: var(--t-text3);
   border-radius: 3px;
   padding: 0 5px;
   font-size: 11px;
 }
 .eh-mine__chip-cnt--active {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: #f8fbff;
+  color: var(--t-accent);
 }
 
 .eh-mine__empty {

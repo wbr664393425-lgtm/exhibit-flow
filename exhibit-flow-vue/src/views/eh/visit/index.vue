@@ -499,10 +499,11 @@ async function uploadFile(file: File) {
 .eh-visit__photo-del {
 	position: absolute; top: 3px; right: 3px;
 	width: 17px; height: 17px; border-radius: 50%;
-	background: rgba(0,0,0,0.6); display: flex;
+	background: rgba(47, 103, 216, 0.9); display: flex;
 	align-items: center; justify-content: center;
 	cursor: pointer; opacity: 0; transition: opacity 0.15s;
 }
+.eh-visit__photo-del:hover { background: rgba(36, 87, 191, 0.95); }
 .eh-visit__photo-thumb-wrap:hover .eh-visit__photo-del { opacity: 1; }
 .eh-visit__alert-ok {
 	background: var(--t-success-light);

@@ -3,9 +3,19 @@
     <div class="eh-notif__head">
       <div>
         <h2 class="eh-notif__title">通知中心</h2>
-        <p class="eh-notif__sub">未读 {{ unread }} 条</p>
+        <p class="eh-notif__sub">共 {{ items.length }} 条通知 · 未读 {{ unread }} 条</p>
       </div>
       <button v-if="unread > 0" class="eh-notif__mark" @click="onMarkAll">全部标已读</button>
+    </div>
+
+    <div class="eh-notif__summary">
+      <div class="eh-notif__summary-icon">
+        <Ic n="bell" :size="18" color="var(--t-accent)" />
+      </div>
+      <div>
+        <div class="eh-notif__summary-title">展厅申请动态</div>
+        <div class="eh-notif__summary-text">审批结果、归还签收和系统提醒会在这里同步</div>
+      </div>
     </div>
 
     <div class="eh-notif__list">
@@ -53,7 +63,7 @@ const colorMap: Record<Notification['type'], { c: string; bg: string }> = {
   approval: { c: '#f59e0b', bg: '#fffbeb' },
   approved: { c: 'var(--t-success)', bg: 'var(--t-success-light)' },
   rejected: { c: 'var(--t-danger)', bg: 'var(--t-danger-light)' },
-  reminder: { c: '#1d4ed8', bg: '#eff6ff' },
+  reminder: { c: 'var(--t-accent)', bg: 'var(--t-accent-light)' },
   system: { c: 'var(--t-text3)', bg: 'var(--t-bg)' },
 };
 
@@ -75,12 +85,14 @@ async function onMarkAll() {
 <style scoped>
 .eh-notif {
   padding: 16px;
+  color: var(--t-text1);
 }
 .eh-notif__head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 .eh-notif__title {
   margin: 0;
@@ -89,49 +101,102 @@ async function onMarkAll() {
   color: var(--t-text1);
 }
 .eh-notif__sub {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-size: 12px;
   color: var(--t-text3);
 }
 .eh-notif__mark {
-  border: 1px solid var(--t-border);
-  background: var(--t-surface);
-  color: var(--t-text2);
-  padding: 5px 10px;
-  border-radius: 4px;
+  border: 1px solid var(--t-accent-border);
+  background: var(--t-accent-light);
+  color: var(--t-accent-strong);
+  padding: 6px 11px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 11px;
   font-family: inherit;
   font-weight: 600;
+  box-shadow: rgba(47, 103, 216, 0.08) 0 6px 14px;
+  white-space: nowrap;
+}
+.eh-notif__summary {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 13px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--t-border-dark);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(47, 103, 216, 0.1), rgba(47, 103, 216, 0.02)),
+    var(--t-surface);
+  box-shadow: rgba(47, 103, 216, 0.08) 0 10px 26px;
+}
+.eh-notif__summary-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: var(--t-accent-light);
+  border: 1px solid var(--t-accent-border);
+}
+.eh-notif__summary-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t-text1);
+  line-height: 1.3;
+}
+.eh-notif__summary-text {
+  margin-top: 3px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--t-text2);
 }
 .eh-notif__list {
-  background: var(--t-surface);
-  border: 1px solid var(--t-border);
-  border-radius: 8px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .eh-notif__item {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--t-border);
+  position: relative;
+  padding: 13px 13px 13px 14px;
+  border: 1px solid var(--t-border);
+  border-radius: 10px;
   display: flex;
   gap: 10px;
   cursor: pointer;
-  transition: background 0.1s;
-  background: var(--t-bg);
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: rgba(47, 103, 216, 0.06) 0 8px 20px;
+  overflow: hidden;
 }
-.eh-notif__item:last-child {
-  border-bottom: none;
+.eh-notif__item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--t-accent);
 }
 .eh-notif__item--read {
   background: var(--t-surface);
+  box-shadow: none;
+}
+.eh-notif__item--read::before {
+  background: var(--t-border-dark);
 }
 .eh-notif__item--linked:active {
-  background: var(--t-bg);
+  background: var(--t-surface-warm);
+  border-color: var(--t-accent-border);
 }
 .eh-notif__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -146,11 +211,11 @@ async function onMarkAll() {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 .eh-notif__title-line {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--t-text1);
   flex: 1;
   line-height: 1.4;
@@ -167,9 +232,10 @@ async function onMarkAll() {
   margin-top: 4px;
 }
 .eh-notif__text {
-  font-size: 11px;
-  color: var(--t-text3);
-  margin-bottom: 3px;
+  font-size: 12px;
+  color: var(--t-text2);
+  margin-bottom: 5px;
+  line-height: 1.45;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

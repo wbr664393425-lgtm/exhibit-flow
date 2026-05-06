@@ -596,8 +596,8 @@ watch(
 
 <style scoped lang="scss">
 .layout-navbars-tagsview {
-	background-color: #fffaf2;
-	border-bottom: 1px solid #eadfce;
+	background-color: #f8fbff;
+	border-bottom: 1px solid #d9e7fb;
 	position: relative;
 	z-index: 4;
 	:deep(.el-scrollbar__wrap) {
@@ -619,9 +619,9 @@ watch(
 			line-height: 26px;
 			display: flex;
 			align-items: center;
-			border: 1px solid #eadfce;
-			background: #fffdf8;
-			color: #6a5947;
+			border: 1px solid #d9e7fb;
+			background: #ffffff;
+			color: #52627a;
 			padding: 0 15px;
 			margin-right: 5px;
 			border-radius: 2px;
@@ -630,9 +630,9 @@ watch(
 			cursor: pointer;
 			justify-content: space-between;
 			&:hover {
-				background-color: #f7efe3;
-				color: #8b522a;
-				border-color: #dec8ab;
+				background-color: #eaf2ff;
+				color: #1c3f95;
+				border-color: #bfd4fb;
 			}
 			&-iconfont {
 				position: relative;
@@ -648,8 +648,8 @@ watch(
 				line-height: 14px;
 				right: -5px;
 				&:hover {
-					color: #fffaf2;
-					background-color: #b46d40;
+					color: #f8fbff;
+					background-color: #2f67d8;
 				}
 			}
 			.layout-icon-active {
@@ -660,10 +660,10 @@ watch(
 			}
 		}
 		.is-active {
-			color: #8b522a;
-			background: #efe2cf;
-			border-color: #d9c2a7;
-			box-shadow: 0 1px 3px rgba(154, 95, 53, 0.12);
+			color: #1c3f95;
+			background: #e7f0ff;
+			border-color: #bfd4fb;
+			box-shadow: 0 1px 3px rgba(47, 103, 216, 0.16);
 			transition: border-color 3s ease;
 		}
 	}

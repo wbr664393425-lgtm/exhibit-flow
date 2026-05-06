@@ -63,9 +63,9 @@ defineProps<{ steps: string[]; cur: number }>();
   color: #fff;
 }
 .eh-step__circle--active {
-  background: var(--t-text1);
-  border-color: var(--t-text1);
-  color: #fff;
+  background: var(--t-accent);
+  border-color: var(--t-accent);
+  color: #f8fbff;
 }
 .eh-step__label {
   font-size: 12px;
@@ -73,7 +73,7 @@ defineProps<{ steps: string[]; cur: number }>();
   white-space: nowrap;
 }
 .eh-step__label--active {
-  color: var(--t-text1);
+  color: var(--t-accent-strong);
   font-weight: 700;
 }
 .eh-step__line {

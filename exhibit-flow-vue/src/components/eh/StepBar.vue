@@ -15,7 +15,7 @@
 						flexShrink: 0,
 						border: `1.5px solid ${i + 1 < cur ? 'var(--t-success)' : i + 1 === cur ? 'var(--t-accent)' : 'var(--t-border)'}`,
 						background: i + 1 < cur ? 'var(--t-success)' : i + 1 === cur ? 'var(--t-accent)' : 'var(--t-surface)',
-						color: i + 1 <= cur ? '#fffaf2' : 'var(--t-text3)',
+						color: i + 1 <= cur ? '#f8fbff' : 'var(--t-text3)',
 						transition: 'all 0.2s',
 					}"
 				>

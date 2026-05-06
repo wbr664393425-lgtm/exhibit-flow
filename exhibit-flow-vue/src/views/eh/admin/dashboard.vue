@@ -106,7 +106,7 @@
 								minWidth: '72px',
 							}"
 						>
-							<span style="color:#faf9f5;font-size:11px;font-weight:600;white-space:nowrap">{{ d.stage }}</span>
+							<span style="color:#f8fbff;font-size:11px;font-weight:600;white-space:nowrap">{{ d.stage }}</span>
 						</div>
 						<span style="font-size:13px;font-weight:700;color:var(--t-text1)">{{ d.count }}</span>
 					</div>
@@ -127,7 +127,7 @@
 					:style="{
 						border: 'none',
 						background: exportTab === t.key ? 'var(--t-accent)' : 'transparent',
-						color: exportTab === t.key ? '#faf9f5' : 'var(--t-text2)',
+						color: exportTab === t.key ? '#f8fbff' : 'var(--t-text2)',
 						padding: '5px 12px',
 						borderRadius: '6px',
 						cursor: 'pointer',
@@ -146,7 +146,7 @@
 				<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:900px">
 					<thead>
 						<tr style="background:var(--t-accent)">
-							<th v-for="c in EXCEL_COLS" :key="c" style="padding:7px 10px;color:#faf9f5;font-weight:600;white-space:nowrap;text-align:left;border-right:1px solid rgba(250,249,245,0.1);font-family:var(--t-font-mono);letter-spacing:0.03em">{{ c }}</th>
+							<th v-for="c in EXCEL_COLS" :key="c" style="padding:7px 10px;color:#f8fbff;font-weight:600;white-space:nowrap;text-align:left;border-right:1px solid rgba(248,251,255,0.1);font-family:var(--t-font-mono);letter-spacing:0.03em">{{ c }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -187,7 +187,7 @@ const city = ref<any[]>([]);
 const industry = ref<any[]>([]);
 const strategic = ref<any[]>([]);
 const funnel = ref<any[]>([]);
-const funnelColors = ['#9a5f35', '#b8845f', '#d9c2a7', '#8f8a80'];
+const funnelColors = ['#2f67d8', '#5d8ceb', '#bfd4fb', '#8293ab'];
 
 const exportVisible = ref(false);
 const exportTab = ref<'excel' | 'docx'>('excel');

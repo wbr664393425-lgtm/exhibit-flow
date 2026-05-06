@@ -90,7 +90,7 @@
 ------------------------------- */
 // 鼠标 hover 时颜色
 .el-menu-hover-bg-color {
-	background-color: #f3e8d8 !important;
+	background-color: #e7f0ff !important;
 }
 
 // 默认样式修改
@@ -106,7 +106,7 @@
 
 .el-menu-item,
 .el-sub-menu__title {
-	color: #6a5947 !important;
+	color: #2a3d63 !important;
 }
 
 // 修复点击左侧菜单折叠再展开时，宽度不跟随问题
@@ -138,13 +138,13 @@
 .el-sub-menu.is-active .el-sub-menu__title,
 .el-sub-menu:not(.is-opened):hover .el-sub-menu__title {
 	@extend .el-menu-hover-bg-color;
-	color: #8b522a !important;
+	color: #1c3f95 !important;
 	font-weight: 600;
 }
 
 .el-menu-item:hover {
 	@extend .el-menu-hover-bg-color;
-	color: #8b522a !important;
+	color: #1c3f95 !important;
 }
 
 .el-sub-menu.is-active.is-opened .el-sub-menu__title {
@@ -318,7 +318,7 @@
 ------------------------------- */
 // 表格修改默认颜色
 .el-table {
-	color: #000000;
+	color: var(--t-text1);
 	.el-button.is-text {
 		padding: 0;
 	}
@@ -429,11 +429,11 @@ svg {
 .el-button--primary {
 	--el-button-bg-color: var(--t-accent);
 	--el-button-border-color: var(--t-accent);
-	--el-button-text-color: #faf9f5;
-	--el-button-hover-bg-color: #b85538;
-	--el-button-hover-border-color: #b85538;
-	--el-button-active-bg-color: #a04830;
-	--el-button-active-border-color: #a04830;
+	--el-button-text-color: #f8fbff;
+	--el-button-hover-bg-color: #2457bf;
+	--el-button-hover-border-color: #2457bf;
+	--el-button-active-bg-color: #1c3f95;
+	--el-button-active-border-color: #1c3f95;
 }
 .el-button--danger {
 	--el-button-bg-color: var(--t-danger);
@@ -465,7 +465,7 @@ svg {
 	}
 }
 .el-overlay {
-	background: rgba(0, 0, 0, 0.4);
+	background: rgba(22, 39, 75, 0.32);
 }
 
 /* Form 表单 & Input 输入框 */
@@ -480,7 +480,7 @@ svg {
 	box-shadow: 0 0 0 1px var(--t-border-dark) inset;
 
 	&:hover {
-		box-shadow: 0 0 0 1px #c2c0b6 inset;
+		box-shadow: 0 0 0 1px #a9c5f5 inset;
 	}
 	&.is-focus {
 		box-shadow: 0 0 0 1.5px #3898ec inset !important;
@@ -512,7 +512,7 @@ svg {
 }
 .el-pagination.is-background .el-pager li.is-active {
 	background-color: var(--t-accent) !important;
-	color: #faf9f5 !important;
+	color: #f8fbff !important;
 	border-radius: 6px;
 }
 
