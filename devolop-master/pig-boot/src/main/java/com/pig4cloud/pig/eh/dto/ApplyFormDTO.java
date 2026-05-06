@@ -13,6 +13,9 @@ public class ApplyFormDTO {
 	@Schema(description = "会议主题")
 	private String title;
 
+	@Schema(description = "会议性质：internal内部/external外部")
+	private String meetingNature;
+
 	@Schema(description = "来访单位")
 	private String unit;
 
@@ -37,6 +40,9 @@ public class ApplyFormDTO {
 	@Schema(description = "开始小时，格式 HH")
 	private String startHour;
 
+	@Schema(description = "会议正式开始时间，格式 HH:mm")
+	private String meetingTime;
+
 	@Schema(description = "结束小时，格式 HH")
 	private String endHour;
 
@@ -45,6 +51,12 @@ public class ApplyFormDTO {
 
 	@Schema(description = "预计人数")
 	private Integer headCount;
+
+	@Schema(description = "客户人数")
+	private Integer customerCount;
+
+	@Schema(description = "自有人员人数")
+	private Integer internalCount;
 
 	@Schema(description = "简要议程")
 	private String agenda;

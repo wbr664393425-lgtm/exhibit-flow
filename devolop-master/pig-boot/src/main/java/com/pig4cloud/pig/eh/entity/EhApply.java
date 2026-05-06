@@ -42,6 +42,9 @@ public class EhApply extends Model<EhApply> {
 	@Schema(description = "会议主题")
 	private String subject;
 
+	@Schema(description = "会议性质：internal内部/external外部")
+	private String meetingNature;
+
 	@Schema(description = "简要议程")
 	private String agenda;
 
@@ -59,6 +62,12 @@ public class EhApply extends Model<EhApply> {
 
 	@Schema(description = "人员数量")
 	private Integer visitorCount;
+
+	@Schema(description = "客户人数")
+	private Integer customerCount;
+
+	@Schema(description = "自有人员人数")
+	private Integer internalCount;
 
 	@Schema(description = "最高陪同领导级别")
 	private String topLeaderTitle;

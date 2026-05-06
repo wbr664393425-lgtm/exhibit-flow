@@ -206,6 +206,7 @@ views/eh/visit/index.vue + views/eh/opportunity/index.vue
 |------|---------|---------|
 | H5 列表一直是演示数据 | `exhibit-flow-h5/src/api/eh/apply.ts` | `USE_MOCK` 是否仍为 `true` |
 | 请求直接跳登录页 | `exhibit-flow-h5/src/api/request.ts` | 是否返回 `401`；Token 是否过期/丢失 |
+| H5 提示令牌过期但不跳登录 | `exhibit-flow-h5/src/api/request.ts` | Pig 令牌过期返回 **HTTP 424**（`ResourceAuthExceptionEntryPoint`），非 401；拦截器需同时处理 |
 | 管理端接口返回 code=1 | `exhibit-flow-vue/src/utils/request.ts` | 后端 `R.failed` / 业务校验失败信息 |
 | 菜单能看到但按钮无权限 | `Eh*Controller` 的 `@HasPermission` + 前端 `v-auth` | 角色权限标识是否已分配 |
 | 访问 `/admin/eh/*` 404 | `devolop-master/pig-boot/src/main/resources/application.yml` | `server.servlet.context-path=/admin` 与前端代理是否一致 |
@@ -237,7 +238,7 @@ views/eh/visit/index.vue + views/eh/opportunity/index.vue
     - URL 适配（单体/微服务）
   H5 request.ts:
     - baseURL 默认 /admin
-    - 401 自动跳 /login
+    - 401 / 424（令牌过期）自动清 token 并跳 /login
 
 环境与代理：
   后端：9999 + context-path=/admin

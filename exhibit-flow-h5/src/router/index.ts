@@ -32,10 +32,16 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '新建申请', tab: 'apply' },
       },
       {
+        path: 'apply/edit/:id',
+        name: 'EditApp',
+        component: () => import('../views/applicant/NewApp.vue'),
+        meta: { title: '编辑申请', tab: 'apply' },
+      },
+      {
         path: 'apply/:id',
         name: 'AppDetail',
         component: () => import('../views/applicant/AppDetail.vue'),
-        meta: { title: '申请详情', tab: 'mine' },
+        meta: { title: '申请详情', tab: 'mine', hideTabbar: true },
       },
       {
         path: 'notif',
@@ -54,7 +60,7 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   if (to.meta.requiresAuth && !getToken()) {
-    next({ path: '/login', query: { redirect: to.fullPath } });
+    next({ path: '/login', query: { to: to.fullPath.replace(/^\//, '') } });
   } else {
     next();
   }

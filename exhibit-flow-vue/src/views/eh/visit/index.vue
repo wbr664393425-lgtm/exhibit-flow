@@ -5,6 +5,7 @@
 				<h2 class="eh-visit__title">参观留存</h2>
 				<p class="eh-visit__sub">录入实际到场情况、商机编码与现场照片</p>
 			</div>
+			<Btn variant="outline" size="sm" icon="download" v-auth="'eh_visit_record_export'" @click="onExport">导出</Btn>
 		</div>
 
 		<div class="eh-visit__list">
@@ -41,6 +42,7 @@
 							<span><Ic n="building" :size="11" />{{ app.unit }}</span>
 							<span><Ic n="users" :size="11" />计划 {{ app.headCount }} 人</span>
 							<span v-if="app.opportunityCode"><Ic n="briefcase" :size="11" />{{ app.opportunityCode }}</span>
+							<span v-if="(app as any).photoCount > 0"><Ic n="camera" :size="11" />已上传 {{ (app as any).photoCount }} 张</span>
 						</div>
 					</div>
 					<div style="display:flex;gap:6px;flex-shrink:0">
@@ -49,14 +51,14 @@
 							variant="outline"
 							size="sm"
 							icon="checkSquare"
-							v-auth="'eh_visit_return'"
+							v-auth="'eh_visit_record_edit'"
 							@click="openReturn(app)"
 						>归还签收</Btn>
 						<Btn
 							:variant="app.visitRecord ? 'ghost' : 'primary'"
 							size="sm"
 							:icon="app.visitRecord ? 'edit' : 'plus'"
-							v-auth="app.visitRecord ? 'eh_visit_edit' : 'eh_visit_record'"
+							v-auth="'eh_visit_record_edit'"
 							@click="openRecord(app)"
 						>{{ app.visitRecord ? '编辑' : '录入留存' }}</Btn>
 					</div>
@@ -81,14 +83,28 @@
 				<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
 					<FancyInput label="实际到场人数" v-model="recordForm.headCount" :placeholder="`计划${sel.headCount}人`" type="number" required />
 					<FancyInput label="商机编码" v-model="recordForm.oppCode" placeholder="填「无」可后续补录" hint="允许事后补录" />
-					<FancyInput label="实际开始时间" v-model="recordForm.actualStart" />
-					<FancyInput label="实际结束时间" v-model="recordForm.actualEnd" />
+					<FancyInput label="实际开始时间" type="datetime" v-model="recordForm.actualStart" />
+					<FancyInput label="实际结束时间" type="datetime" v-model="recordForm.actualEnd" />
 				</div>
 				<div>
 					<MonoLabel :style="{ display: 'block', marginBottom: '8px' }">现场照片</MonoLabel>
+					<div v-if="(sel as any)?.visitRecordId" style="margin-bottom:10px">
+						<div v-if="photosLoading" style="font-size:11px;color:var(--t-text3);padding:6px 0">加载中…</div>
+						<div v-else-if="existingPhotos.length" class="eh-visit__photo-grid">
+							<div v-for="photo in existingPhotos" :key="photo.id" class="eh-visit__photo-thumb-wrap">
+								<img :src="photo.fileUrl" :alt="photo.fileName" class="eh-visit__photo-thumb" />
+								<div class="eh-visit__photo-del" @click="deleteExistingPhoto(photo.id)">
+									<Ic n="x" :size="11" color="#fff" />
+								</div>
+							</div>
+						</div>
+						<div v-else style="font-size:11px;color:var(--t-text3);padding:4px 0">暂无已上传照片</div>
+					</div>
 					<div class="eh-visit__upload" @click="openRecordFilePicker">
 						<Ic n="upload" :size="22" color="var(--t-text2)" />
-						<div style="font-size:12px;color:var(--t-text2);font-weight:500;margin-top:6px">点击上传或拍摄照片，支持多张</div>
+						<div style="font-size:12px;color:var(--t-text2);font-weight:500;margin-top:6px">
+							{{ existingPhotos.length ? '继续上传照片' : '点击上传或拍摄照片，支持多张' }}
+						</div>
 						<MonoLabel :style="{ marginTop: '4px' }">JPG / PNG · 单张 ≤ 10 MB</MonoLabel>
 					</div>
 					<div v-if="recordFiles.length" style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
@@ -108,11 +124,11 @@
 			<div v-if="sel" style="display:flex;flex-direction:column;gap:14px">
 				<div style="background:var(--t-bg);border-radius:6px;padding:10px 14px;font-size:12px">
 					<b style="color:var(--t-text1)">{{ sel.title }}</b>
-					<div style="color:var(--t-text3);margin-top:2px">{{ sel.startTime }} — {{ sel.endTime.split(' ')[1] }}</div>
+					<div style="color:var(--t-text3);margin-top:2px">{{ visitStartLabel(sel) }}</div>
 				</div>
 				<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
 					<FancyInput label="签收人" v-model="returnForm.person" required />
-					<FancyInput label="归还时间" v-model="returnForm.time" placeholder="HH:MM" required />
+					<FancyInput label="归还时间" type="time" v-model="returnForm.time" required />
 				</div>
 				<div class="eh-visit__alert-ok">
 					<Ic n="checkCircle" :size="13" color="var(--t-success)" />
@@ -130,11 +146,14 @@
 </template>
 
 <script lang="ts" name="ehvisit" setup>
-import { onMounted, reactive, ref } from 'vue';
+import { nextTick, onMounted, reactive, ref } from 'vue';
 import { ElDialog, ElMessage } from 'element-plus';
 import { Card, Btn, Badge, Ic, MonoLabel, FancyInput } from '/@/components/eh';
 import { fetchAggregateList, submitReturnSign, upsertRecord } from '/@/api/eh/visit';
-import { saveBatchPhotos } from '/@/api/eh/visit-photo';
+import { downBlobFile } from '/@/utils/other';
+import { fetchList, saveBatchPhotos, delObj } from '/@/api/eh/visit-photo';
+import { getUserInfo } from '/@/api/login';
+import { useUserInfo } from '/@/stores/userInfo';
 import request from '/@/utils/request';
 import type { Application } from '/@/components/eh/mock';
 
@@ -147,10 +166,16 @@ const recordFiles = ref<File[]>([]);
 
 const recordForm = reactive({ headCount: '' as string | number, oppCode: '', actualStart: '', actualEnd: '', notes: '' });
 const returnForm = reactive({ person: '', time: '' });
+const existingPhotos = ref<{ id: number; fileUrl: string; fileName: string }[]>([]);
+const photosLoading = ref(false);
 
 onMounted(() => {
 	loadData();
 });
+
+function onExport() {
+	downBlobFile('/admin/eh/visit/export', {}, '参观留存记录.xlsx');
+}
 
 function mapStatus(status?: string): Application['status'] {
 	const map: Record<string, Application['status']> = {
@@ -165,6 +190,42 @@ function fmtTime(v?: string) {
 	return v.replace('T', ' ').slice(0, 16);
 }
 
+function pickStr(v: unknown): string {
+	if (v == null) return '';
+	const s = String(v).trim();
+	return s;
+}
+
+function signerFromUserLike(u: any): string {
+	if (!u || typeof u !== 'object') return '';
+	return pickStr(u.name) || pickStr(u.nickname) || pickStr(u.username);
+}
+
+function signerFromStore(): string {
+	const infos = useUserInfo().userInfos as any;
+	if (!infos) return '';
+	const fromNested = signerFromUserLike(infos.user);
+	if (fromNested) return fromNested;
+	return signerFromUserLike(infos);
+}
+
+async function resolveDefaultReturnSigner(app: Application): Promise<string> {
+	const existing = pickStr(app.visitRecord?.returnPerson);
+	if (existing) return existing;
+
+	let s = signerFromStore();
+	if (s) return s;
+
+	try {
+		const res: any = await getUserInfo();
+		const user = res?.data ?? res;
+		s = signerFromUserLike(user);
+	} catch {
+		/* ignore */
+	}
+	return s;
+}
+
 function toDateTimeString(value?: string) {
 	if (!value) return '';
 	const normalized = value.replace('T', ' ').trim();
@@ -172,12 +233,18 @@ function toDateTimeString(value?: string) {
 	return normalized.length === 16 ? `${normalized}:00` : normalized;
 }
 
+function visitStartLabel(app: Application) {
+	const [date = '—', time = '—'] = app.startTime.split(' ');
+	return `${date} · ${time}开始`;
+}
+
 function toApp(raw: any): Application {
 	const hasVisit = !!raw.visitId;
 	return {
-		id: `EH-${raw.applyId}`,
-		title: raw.title || '-',
-		unit: raw.unit || '-',
+			id: `EH-${raw.applyId}`,
+			title: raw.title || '-',
+			meetingNature: raw.meetingNature || 'external',
+			unit: raw.unit || '-',
 		industry: '-',
 		district: '-',
 		applicant: '-',
@@ -189,9 +256,11 @@ function toApp(raw: any): Application {
 		visitors: [],
 		services: [],
 		status: hasVisit ? 'completed' : mapStatus(raw.status),
-		approvalNodes: [],
-		headCount: raw.headCount || 0,
-		agenda: '',
+			approvalNodes: [],
+			headCount: raw.headCount || 0,
+			customerCount: raw.customerCount ?? raw.headCount ?? 0,
+			internalCount: raw.internalCount ?? 0,
+			agenda: '',
 		created: '',
 		opportunityCode: raw.opportunityCode || '',
 		visitRecord: hasVisit
@@ -201,11 +270,11 @@ function toApp(raw: any): Application {
 					actualHeadCount: raw.actualVisitCount || 0,
 					photos: 0,
 					returnSigned: !!raw.returnTime,
-					returnPerson: raw.returnSigner || '',
+					returnPerson: pickStr(raw.returnSigner ?? raw.return_signer),
 					returnTime: fmtTime(raw.returnTime),
 			  }
 			: undefined,
-		...( { visitRecordId: raw.visitId } as any),
+		...( { visitRecordId: raw.visitId, photoCount: raw.photoCount ?? 0 } as any),
 	};
 }
 
@@ -222,16 +291,41 @@ function openRecord(app: Application) {
 	sel.value = app;
 	recordForm.headCount = app.visitRecord?.actualHeadCount ?? '';
 	recordForm.oppCode = app.opportunityCode ?? '';
-	recordForm.actualStart = app.visitRecord?.actualStart ?? app.startTime;
-	recordForm.actualEnd = app.visitRecord?.actualEnd ?? app.endTime;
+	recordForm.actualStart = toDateTimeString(app.visitRecord?.actualStart ?? app.startTime);
+	recordForm.actualEnd = toDateTimeString(app.visitRecord?.actualEnd ?? app.endTime);
 	recordForm.notes = '';
 	recordFiles.value = [];
+	existingPhotos.value = [];
 	recordVisible.value = true;
+	const visitId = (app as any).visitRecordId;
+	if (visitId) loadExistingPhotos(visitId);
 }
-function openReturn(app: Application) {
+
+async function loadExistingPhotos(visitId: number) {
+	photosLoading.value = true;
+	try {
+		const res = await fetchList({ visitId, current: 1, size: 50 });
+		existingPhotos.value = (res?.data?.records || []).map((p: any) => ({
+			id: p.id, fileUrl: p.fileUrl, fileName: p.fileName,
+		}));
+	} catch { /* 静默失败，不阻断留存提交 */ }
+	finally { photosLoading.value = false; }
+}
+
+async function deleteExistingPhoto(photoId: number) {
+	try {
+		await delObj([photoId]);
+		existingPhotos.value = existingPhotos.value.filter(p => p.id !== photoId);
+		ElMessage.success('照片已删除');
+	} catch (e: any) {
+		ElMessage.error(e?.msg || '删除失败');
+	}
+}
+async function openReturn(app: Application) {
 	sel.value = app;
-	returnForm.person = app.visitRecord?.returnPerson || '';
-	returnForm.time = app.visitRecord?.returnTime?.slice(11, 16) || '';
+	returnForm.person = await resolveDefaultReturnSigner(app);
+	returnForm.time = app.visitRecord?.returnTime?.slice(11, 16) || app.endTime.split(' ')[1] || '';
+	await nextTick();
 	returnVisible.value = true;
 }
 async function submitRecord() {
@@ -394,8 +488,22 @@ async function uploadFile(file: File) {
 	align-items: center;
 }
 .eh-visit__upload:hover {
-	border-color: var(--t-text1);
+	border-color: var(--t-accent);
 }
+.eh-visit__photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+.eh-visit__photo-thumb-wrap {
+	position: relative; width: 72px; height: 72px;
+	border-radius: 5px; overflow: hidden; border: 1px solid var(--t-border);
+}
+.eh-visit__photo-thumb { width: 100%; height: 100%; object-fit: cover; background: var(--t-surface-warm); }
+.eh-visit__photo-del {
+	position: absolute; top: 3px; right: 3px;
+	width: 17px; height: 17px; border-radius: 50%;
+	background: rgba(0,0,0,0.6); display: flex;
+	align-items: center; justify-content: center;
+	cursor: pointer; opacity: 0; transition: opacity 0.15s;
+}
+.eh-visit__photo-thumb-wrap:hover .eh-visit__photo-del { opacity: 1; }
 .eh-visit__alert-ok {
 	background: var(--t-success-light);
 	border: 1px solid #2c641533;

@@ -6,21 +6,25 @@
 			a.id AS applyId,
 			v.id AS visitId,
 			a.subject AS title,
+			a.visitor_company AS unit,
+			a.industry,
 			a.status AS status,
 			a.start_time AS startTime,
+			a.customer_count AS customerCount,
+			a.internal_count AS internalCount,
 			COALESCE(p.photo_count, 0) AS photoCount
 		FROM eh_apply a
 		LEFT JOIN eh_visit_record v ON v.apply_id = a.id AND v.del_flag = '0'
 		LEFT JOIN (
 			SELECT
-				visit_id,
+				COALESCE(p.apply_id, vr.apply_id) AS apply_id,
 				COUNT(*) AS photo_count
-			FROM eh_visit_photo
-			WHERE del_flag = '0'
-			GROUP BY visit_id
-		) p ON p.visit_id = v.id
+			FROM eh_visit_photo p
+			LEFT JOIN eh_visit_record vr ON vr.id = p.visit_id AND vr.del_flag = '0'
+			WHERE p.del_flag = '0'
+			GROUP BY COALESCE(p.apply_id, vr.apply_id)
+		) p ON p.apply_id = a.id
 		WHERE a.del_flag = '0'
-		AND a.status IN ('2', '5')
 		ORDER BY a.start_time DESC
 	</select>
 </mapper>

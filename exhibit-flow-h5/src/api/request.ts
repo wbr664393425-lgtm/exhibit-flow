@@ -1,6 +1,22 @@
 import axios from 'axios';
-import { getToken } from '../utils/auth';
+import { getToken, removeToken } from '../utils/auth';
 import { showToast } from 'vant';
+
+/** Pig 资源服务：令牌过期返回 424，非 401（见 ResourceAuthExceptionEntryPoint） */
+let authRedirecting = false;
+
+function redirectToLogin() {
+  if (authRedirecting) return;
+  authRedirecting = true;
+  showToast('登录状态已过期，请重新登录');
+  removeToken();
+  const path = window.location.pathname + window.location.search;
+  const to = path !== '/login' && !path.startsWith('/login?') ? path.replace(/^\//, '') : '';
+  const qs = to ? `?to=${encodeURIComponent(to)}` : '';
+  setTimeout(() => {
+    window.location.replace(`/login${qs}`);
+  }, 600);
+}
 
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || '/admin',
@@ -39,10 +55,26 @@ service.interceptors.response.use(
     return resData.data !== undefined ? resData.data : resData;
   },
   (error) => {
-    if (error.response?.status === 401) {
-      window.location.href = '/login';
+    const requestUrl = error?.config?.url || '';
+    const isTokenRequest = requestUrl.includes('/oauth2/token');
+    const msg =
+      error?.response?.data?.error_description ||
+      error?.response?.data?.msg ||
+      error?.response?.data?.message ||
+      error?.message ||
+      '网络异常';
+
+    // 登录接口错误交给登录页统一提示，避免被全局重定向打断
+    if (isTokenRequest) {
+      return Promise.reject(new Error(msg));
     }
-    showToast(error.message || '网络异常');
+
+    const status = error.response?.status;
+    if (status === 401 || status === 424) {
+      redirectToLogin();
+      return Promise.reject(error);
+    }
+    showToast(msg);
     return Promise.reject(error);
   }
 );

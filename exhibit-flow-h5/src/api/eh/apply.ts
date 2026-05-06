@@ -1,5 +1,5 @@
 import request from '../request';
-import { MOCK_APPLICATIONS, type Application } from '../../mock/applications';
+import { MOCK_APPLICATIONS, type Application, type ApplyHistoryEvent } from '../../mock/applications';
 
 const USE_MOCK = false;
 
@@ -28,6 +28,7 @@ function toApplication(raw: any): Application {
   return {
     id: String(raw.id),
     title: raw.subject || '',
+    meetingNature: raw.meetingNature || 'external',
     unit: raw.visitorCompany || '',
     industry: raw.industry || '',
     district: raw.district || '',
@@ -38,6 +39,8 @@ function toApplication(raw: any): Application {
     endTime: fmtDt(raw.endTime),
     leader: raw.topLeaderTitle || '无',
     headCount: raw.visitorCount || 0,
+    customerCount: raw.customerCount ?? raw.visitorCount ?? 0,
+    internalCount: raw.internalCount ?? 0,
     agenda: raw.agenda || '',
     services: raw.extraServices ? String(raw.extraServices).split(',').filter(Boolean) : [],
     status: STATUS_MAP[raw.status] || 'draft',
@@ -57,12 +60,20 @@ function toApplication(raw: any): Application {
       isStrategic: v.isKeyCustomer === '1',
       strategicLevel: v.keyCustomerLevel || '',
     })),
+    history: (raw.history || []).map((h: any): ApplyHistoryEvent => ({
+      eventType: h.eventType || '',
+      eventDesc: h.eventDesc || '',
+      operator: h.operator || '',
+      remark: h.remark || null,
+      eventTime: fmtDt(h.eventTime),
+    })),
   };
 }
 
 function buildPayload(payload: Record<string, unknown>) {
   return {
     title: payload.title,
+    meetingNature: payload.meetingNature || 'external',
     unit: payload.unit,
     industry: payload.industry,
     district: payload.district,
@@ -70,10 +81,13 @@ function buildPayload(payload: Record<string, unknown>) {
     phone: payload.phone,
     dept: payload.dept,
     startDate: payload.startDate,
-    startHour: payload.startHour,
-    endHour: payload.endHour,
+    meetingTime: payload.meetingTime || payload.startHour,
+    startHour: payload.meetingTime || payload.startHour,
+    endHour: payload.endHour || payload.meetingTime || payload.startHour,
     leader: payload.leader,
-    headCount: Number(payload.headCount || 0),
+    customerCount: Number(payload.customerCount || 0),
+    internalCount: Number(payload.internalCount || 0),
+    headCount: Number(payload.customerCount || 0) + Number(payload.internalCount || 0),
     agenda: payload.agenda,
     remark: payload.remark,
     services: payload.services || [],
@@ -83,14 +97,42 @@ function buildPayload(payload: Record<string, unknown>) {
 
 export async function fetchMyApplications(): Promise<Application[]> {
   if (USE_MOCK) return MOCK_APPLICATIONS;
-  const res: any = await request.get('/eh/apply/page', { params: { size: 50 } });
+  const res: any = await request.get('/eh/apply/my/page', { params: { current: 1, size: 50 } });
   const records: any[] = res?.records ?? (Array.isArray(res) ? res : []);
   return records.map(toApplication);
 }
 
+export interface MyApplicationsPageResult {
+  records: Application[];
+  total: number;
+  current: number;
+  size: number;
+}
+
+export async function fetchMyApplicationsPage(current = 1, size = 10): Promise<MyApplicationsPageResult> {
+  if (USE_MOCK) {
+    const start = (current - 1) * size;
+    const end = start + size;
+    return {
+      records: MOCK_APPLICATIONS.slice(start, end),
+      total: MOCK_APPLICATIONS.length,
+      current,
+      size,
+    };
+  }
+  const res: any = await request.get('/eh/apply/my/page', { params: { current, size } });
+  const records: any[] = res?.records ?? (Array.isArray(res) ? res : []);
+  return {
+    records: records.map(toApplication),
+    total: Number(res?.total ?? records.length ?? 0),
+    current: Number(res?.current ?? current),
+    size: Number(res?.size ?? size),
+  };
+}
+
 export async function fetchApplication(id: string): Promise<Application | undefined> {
   if (USE_MOCK) return MOCK_APPLICATIONS.find((a) => a.id === id);
-  const raw: any = await request.get(`/eh/apply/details/${id}`);
+  const raw: any = await request.get(`/eh/apply/my/details/${id}`);
   return raw ? toApplication(raw) : undefined;
 }
 
@@ -130,6 +172,11 @@ export function rescheduleApplication(id: string, info: { newDate: string; newSH
   return request.put(`/eh/apply/${id}/reschedule`, info);
 }
 
+export function resubmitApplication(id: string, payload: Record<string, unknown>): Promise<void> {
+  if (USE_MOCK) return Promise.resolve();
+  return request.put(`/eh/apply/${id}/submit`, buildPayload(payload)) as unknown as Promise<void>;
+}
+
 export function checkTimeConflict(date: string, startHour: string, endHour: string): Promise<string | null> {
   if (USE_MOCK) {
     const sh = parseInt(startHour, 10);
@@ -140,4 +187,14 @@ export function checkTimeConflict(date: string, startHour: string, endHour: stri
   return request.get('/eh/apply/conflict', {
     params: { date, startHour, endHour },
   }) as unknown as Promise<string | null>;
+}
+
+export async function fetchDaySchedules(date: string): Promise<Application[]> {
+  if (USE_MOCK) {
+    return MOCK_APPLICATIONS.filter((item) => item.startTime.startsWith(date));
+  }
+  const res: any = await request.get('/eh/apply/calendar', {
+    params: { start: date, end: date },
+  });
+  return (Array.isArray(res) ? res : []).map(toApplication);
 }

@@ -16,11 +16,33 @@
 			v.opportunity_code AS opportunityCode,
 			v.return_signer AS returnSigner,
 			v.return_time AS returnTime,
-			v.status AS visitStatus
+			v.status AS visitStatus,
+			(SELECT COUNT(*) FROM eh_visit_photo p WHERE p.visit_id = v.id AND p.del_flag = '0') AS photoCount
 		FROM eh_apply a
 		LEFT JOIN eh_visit_record v ON v.apply_id = a.id AND v.del_flag = '0'
 		WHERE a.del_flag = '0'
 		AND a.status IN ('2', '5')
 		ORDER BY a.start_time DESC
+	</select>
+
+	<select id="selectVisitExportList" resultType="com.pig4cloud.pig.eh.vo.EhVisitRecordExportVO">
+		SELECT
+			a.subject                                                                    AS title,
+			a.visitor_company                                                            AS unit,
+			a.visitor_count                                                              AS headCount,
+			a.industry                                                                   AS industry,
+			v.our_leader_level                                                           AS ourLeaderLevel,
+			v.actual_visit_count                                                         AS actualVisitCount,
+			COALESCE(v.actual_visit_time, a.start_time)                                  AS visitTime,
+			v.opportunity_code                                                           AS opportunityCode,
+			(SELECT COUNT(*) FROM eh_visit_photo p WHERE p.visit_id = v.id AND p.del_flag = '0') AS photoCount,
+			v.return_signer                                                              AS returnSigner,
+			v.return_time                                                                AS returnTime,
+			v.status                                                                     AS visitStatus
+		FROM eh_apply a
+		LEFT JOIN eh_visit_record v ON v.apply_id = a.id AND v.del_flag = '0'
+		WHERE a.del_flag = '0'
+		  AND a.status IN ('2', '5')
+		ORDER BY COALESCE(v.actual_visit_time, a.start_time) DESC
 	</select>
 </mapper>

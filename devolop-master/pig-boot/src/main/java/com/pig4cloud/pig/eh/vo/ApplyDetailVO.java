@@ -8,6 +8,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Schema(description = "申请聚合详情")
@@ -17,6 +18,8 @@ public class ApplyDetailVO {
 	private Long id;
 
 	private String subject;
+
+	private String meetingNature;
 
 	private String visitorCompany;
 
@@ -38,6 +41,10 @@ public class ApplyDetailVO {
 
 	private Integer visitorCount;
 
+	private Integer customerCount;
+
+	private Integer internalCount;
+
 	private String agenda;
 
 	private String extraServices;
@@ -53,6 +60,8 @@ public class ApplyDetailVO {
 	private List<VisitorVO> visitors = new ArrayList<>();
 
 	private List<ApprovalNodeVO> approvalNodes = new ArrayList<>();
+
+	private List<HistoryVO> history = new ArrayList<>();
 
 	@Data
 	public static class VisitorVO {
@@ -76,5 +85,14 @@ public class ApplyDetailVO {
 		private String opinion;
 		private LocalDateTime actionTime;
 		private String status;
+	}
+
+	@Data
+	public static class HistoryVO {
+		private String eventType;
+		private String eventDesc;
+		private String operator;
+		private String remark;
+		private LocalDateTime eventTime;
 	}
 }

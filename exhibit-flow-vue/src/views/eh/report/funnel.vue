@@ -38,7 +38,7 @@ import { Card } from '/@/components/eh';
 import { fetchFunnel } from '/@/api/eh/admin-stats';
 
 const funnel = ref<any[]>([]);
-const colors = ['#111111', '#313130', '#626260', '#9c9fa5'];
+const colors = ['#9a5f35', '#b8845f', '#d9c2a7', '#8f8a80'];
 onMounted(async () => {
 	funnel.value = (await fetchFunnel()).data;
 });

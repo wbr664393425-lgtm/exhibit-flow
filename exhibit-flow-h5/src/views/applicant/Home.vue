@@ -4,17 +4,12 @@
     <div class="eh-home__hero">
       <div class="eh-home__deco eh-home__deco--a" />
       <div class="eh-home__deco eh-home__deco--b" />
+      <button class="eh-home__logout" @click="onLogout">退出登录</button>
       <MonoLabel :style="{ color: 'rgba(255,255,255,0.5)', display: 'block', marginBottom: '6px' }">
         欢迎回来
       </MonoLabel>
-      <div class="eh-home__name">李建国</div>
-      <div class="eh-home__meta">天河区 · 政企客户部</div>
-      <div class="eh-home__stats">
-        <div v-for="s in stats" :key="s.label" class="eh-home__stat">
-          <div class="eh-home__stat-value">{{ s.value }}</div>
-          <div class="eh-home__stat-label">{{ s.label }}</div>
-        </div>
-      </div>
+      <div class="eh-home__name">{{ displayName }}</div>
+      <div class="eh-home__meta">{{ profileMeta }}</div>
     </div>
 
     <!-- Quick actions -->
@@ -30,7 +25,7 @@
       <MonoLabel :style="{ display: 'block', marginBottom: '10px' }">最近申请</MonoLabel>
       <div class="eh-home__list">
         <div
-          v-for="a in apps.slice(0, 3)"
+          v-for="a in apps"
           :key="a.id"
           class="eh-home__item"
           @click="router.push(`/apply/${a.id}`)"
@@ -50,27 +45,28 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { MonoLabel, Badge, Ic } from '../../components/eh';
-import { fetchMyApplications } from '../../api/eh/apply';
+import { fetchMyApplicationsPage } from '../../api/eh/apply';
 import type { Application } from '../../mock/applications';
+import { useUserStore } from '../../store/user';
 
 const router = useRouter();
+const userStore = useUserStore();
 const apps = ref<Application[]>([]);
 
 onMounted(async () => {
-  apps.value = await fetchMyApplications();
+  await userStore.fetchProfile().catch(() => undefined);
+  const pageData = await fetchMyApplicationsPage(1, 5);
+  apps.value = pageData.records;
 });
+const displayName = computed(() => userStore.realName || userStore.username || '用户');
+const profileMeta = computed(() => userStore.deptName || '暂无部门信息');
 
-const stats = computed(() => {
-  const pending = apps.value.filter((a) => a.status === 'pending').length;
-  const todayDate = '2026-04-23';
-  const today = apps.value.filter((a) => a.startTime.startsWith(todayDate)).length;
-  const approved = apps.value.filter((a) => a.status === 'approved').length;
-  return [
-    { value: apps.value.length || 0, label: '全部申请' },
-    { value: pending, label: '审批中' },
-    { value: today || approved, label: '今日/已批准' },
-  ];
-});
+function onLogout() {
+  const ok = window.confirm('确认退出登录？');
+  if (!ok) return;
+  userStore.logout();
+  router.replace('/login');
+}
 </script>
 
 <style scoped>
@@ -104,6 +100,21 @@ const stats = computed(() => {
   height: 60px;
   background: rgba(255, 86, 0, 0.1);
 }
+.eh-home__logout {
+  position: absolute;
+  right: 16px;
+  top: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 999px;
+  height: 28px;
+  padding: 0 12px;
+  font-size: 12px;
+  cursor: pointer;
+  z-index: 2;
+  font-family: inherit;
+}
 .eh-home__name {
   font-size: 20px;
   font-weight: 700;
@@ -114,30 +125,6 @@ const stats = computed(() => {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
 }
-.eh-home__stats {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-}
-.eh-home__stat {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.eh-home__stat-value {
-  font-size: 20px;
-  font-weight: 800;
-  color: #fff;
-  line-height: 1;
-}
-.eh-home__stat-label {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.5);
-  margin-top: 4px;
-}
-
 .eh-home__body {
   padding: 16px;
 }

@@ -1,25 +1,18 @@
 <template>
   <div class="eh-new">
-    <!-- breadcrumb -->
-    <div class="eh-new__bar">
-      <button class="eh-new__back" @click="onBack">
-        <Ic n="arrowLeft" :size="12" />返回
-      </button>
-      <Ic n="chevronRight" :size="12" color="var(--t-text3)" />
-      <span class="eh-new__title">新建参观申请</span>
-    </div>
-
     <div class="eh-new__card">
       <StepBar :steps="STEPS" :cur="step" />
 
       <!-- Step 1：基本信息 -->
       <div v-if="step === 1" class="eh-new__grid eh-new__grid--col">
-        <FancyInput label="会议主题" v-model="form.title" placeholder="本次参观的主题" required />
+        <FancySelect label="会议主题" v-model="form.title" :options="MEETING_TOPICS" required />
 
         <div class="eh-new__grid eh-new__grid--2col">
+          <FancySelect label="会议性质" v-model="form.meetingNature" :options="MEETING_NATURE_OPTIONS" required />
           <FancyInput label="来访单位" v-model="form.unit" placeholder="单位全称" required />
-          <FancySelect label="所属行业" v-model="form.industry" :options="INDUSTRIES" />
         </div>
+
+        <FancySelect label="所属行业" v-model="form.industry" :options="INDUSTRIES" />
 
         <FancyInput label="参观日期" required hint="点击选择日期，不可早于今天">
           <div
@@ -53,67 +46,68 @@
           </div>
         </FancyInput>
 
-        <FancyInput label="使用时段" required hint="选择占用展厅的时间段">
-          <div class="eh-new__slots">
-            <button
-              v-for="s in TIME_SLOTS"
-              :key="s.key"
-              type="button"
-              class="eh-new__slot"
-              :class="{
-                'eh-new__slot--on':       form.timeSlot === s.key && conflictState === 'idle' && !checking,
-                'eh-new__slot--checking': form.timeSlot === s.key && checking,
-                'eh-new__slot--ok':       form.timeSlot === s.key && conflictState === 'ok',
-                'eh-new__slot--err':      form.timeSlot === s.key && conflictState === 'error',
-              }"
-              @click="selectSlot(s)"
-            >
-              <span class="eh-new__slot-name">{{ s.name }}</span>
-              <span class="eh-new__slot-range">{{ s.range }}</span>
-            </button>
+        <FancyInput label="会议正式开始时间" required hint="选择具体开始时间点">
+          <div
+            class="eh-new__time-field"
+            role="button"
+            tabindex="0"
+            aria-label="选择会议正式开始时间"
+            @click="openTimePicker"
+            @keydown.enter.prevent="openTimePicker"
+            @keydown.space.prevent="openTimePicker"
+          >
+            <div class="eh-new__time-inner">
+              <span :class="form.meetingTime ? 'eh-new__time-val' : 'eh-new__time-empty'">
+                {{ displayTimeLabel }}
+              </span>
+              <span class="eh-new__time-icon-row" aria-hidden="true">
+                <Ic n="clock" :size="15" color="var(--t-text3)" />
+                <Ic n="chevronDown" :size="12" color="var(--t-text3)" />
+              </span>
+            </div>
+            <input
+              ref="timeInputRef"
+              type="time"
+              tabindex="-1"
+              v-model="form.meetingTime"
+              class="eh-new__time-input"
+            />
           </div>
         </FancyInput>
 
-        <!-- 冲突弹窗 -->
-        <Transition name="eh-modal">
-          <div v-if="conflictModal" class="eh-new__modal-mask" @click.self="conflictModal = false">
-            <div class="eh-new__modal">
-              <div class="eh-new__modal-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--t-danger)"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              </div>
-              <div class="eh-new__modal-title">时段冲突</div>
-              <div class="eh-new__modal-desc">所选时段已被以下申请占用，请更换日期或时段后重新提交。</div>
-              <div class="eh-new__modal-detail">
-                <div class="eh-new__modal-detail-row">
-                  <span class="eh-new__modal-detail-key">占用申请</span>
-                  <span class="eh-new__modal-detail-val">{{ form.conflictResult }}</span>
+        <div v-if="dayScheduleHint" class="eh-new__notice">
+          <Ic n="info" :size="13" color="#b45309" />
+          <span>{{ dayScheduleHint }}</span>
+        </div>
+
+        <div class="eh-new__grid eh-new__grid--2col">
+          <FancyInput label="我公司陪同领导">
+            <div class="eh-leader-combo">
+              <input
+                v-model="form.leader"
+                class="eh-input__field"
+                placeholder="请输入"
+                autocomplete="off"
+                @focus="leaderOpen = true"
+                @blur="leaderOpen = false"
+              />
+              <Transition name="eh-leader-drop">
+                <div v-if="leaderOpen" class="eh-leader-combo__drop">
+                  <div v-for="opt in ['总经理', '分管副总']" :key="opt"
+                    class="eh-leader-combo__opt"
+                    @mousedown.prevent="form.leader = opt; leaderOpen = false"
+                  >{{ opt }}</div>
                 </div>
-                <div class="eh-new__modal-detail-row">
-                  <span class="eh-new__modal-detail-key">冲突时段</span>
-                  <span class="eh-new__modal-detail-val">{{ form.startDate }} {{ form.startHour }}:00 — {{ form.endHour }}:00</span>
-                </div>
-              </div>
-              <button class="eh-new__modal-btn" @click="conflictModal = false">我知道了</button>
+              </Transition>
             </div>
-          </div>
-        </Transition>
-
-        <div class="eh-new__grid eh-new__grid--2col">
-          <FancyInput label="最高陪同领导" v-model="form.leader" placeholder="领导姓名及职务" />
-          <FancyInput label="预计人数" v-model="form.headCount" placeholder="总人数" type="number" />
+          </FancyInput>
+          <FancyInput label="客户人数" v-model="form.customerCount" placeholder="客户到场人数" type="number" />
         </div>
 
         <div class="eh-new__grid eh-new__grid--2col">
-          <FancySelect label="所属区县" v-model="form.district" :options="DISTRICTS" required />
-          <FancyInput label="申请部门" v-model="form.dept" placeholder="所在部门全称" required />
+          <FancySelect label="所属区县" v-model="form.district" :options="districts" required />
+          <FancyInput label="自有人员人数" v-model="form.internalCount" placeholder="我方到场人数" type="number" />
         </div>
-
-        <div class="eh-new__grid eh-new__grid--2col">
-          <FancyInput label="申请人姓名" v-model="form.applicant" required />
-          <FancyInput label="联系电话" v-model="form.phone" required />
-        </div>
-
-        <FancyInput label="简要议程" type="textarea" v-model="form.agenda" placeholder="本次参观主要议程和目的" />
       </div>
 
       <!-- Step 2：确认提交 -->
@@ -133,10 +127,6 @@
             <span class="eh-new__summary-val">{{ r[1] }}</span>
           </div>
         </div>
-        <div class="eh-new__hint">
-          <Ic n="info" :size="14" color="var(--t-warning)" />
-          <span><b>审批链：</b>{{ approvalChainText }}</span>
-        </div>
         <FancyInput label="备注" type="textarea" v-model="form.remark" placeholder="其他特殊需求或补充说明" />
       </div>
 
@@ -144,7 +134,7 @@
       <div class="eh-new__footer">
         <Btn variant="ghost" icon="arrowLeft" @click="onPrev">{{ step === 1 ? '取消' : '上一步' }}</Btn>
         <div class="eh-new__actions">
-          <Btn v-if="step < 2" variant="ghost" @click="onSaveDraft">存草稿</Btn>
+          <Btn v-if="step < 2 && !isEdit" variant="ghost" @click="onSaveDraft">存草稿</Btn>
           <Btn v-if="step < 2" variant="primary" icon="chevronRight" @click="onNext">下一步</Btn>
           <Btn v-else variant="orange" icon="send" :disabled="submitting" @click="onSubmit">
             {{ submitting ? '提交中…' : '提交申请' }}
@@ -164,17 +154,51 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { FancyInput, FancySelect, Btn, Ic, StepBar } from '../../components/eh';
-import { INDUSTRIES, DISTRICTS } from '../../mock/applications';
-import { checkTimeConflict, saveDraftApplication, submitApplication } from '../../api/eh/apply';
+import { INDUSTRIES } from '../../mock/applications';
+import request from '../../api/request';
+import { fetchDaySchedules, saveDraftApplication, submitApplication, resubmitApplication, fetchApplication } from '../../api/eh/apply';
 
 const router = useRouter();
+const route = useRoute();
+
+const editId = computed(() => route.params.id as string | undefined);
+const isEdit = computed(() => !!editId.value);
+
+const districts = ref<string[]>([]);
+onMounted(async () => {
+  const res = await request({ url: '/dict/type/dezhou_district', method: 'get' }).catch(() => null);
+  districts.value = (Array.isArray(res) ? res : []).map((item: any) => item.label as string);
+
+  if (isEdit.value) {
+    const app = await fetchApplication(editId.value!).catch(() => undefined);
+    if (app) {
+      const startDate = app.startTime?.split(' ')[0] || '';
+      const meetingTime = app.startTime?.split(' ')[1]?.slice(0, 5) || '';
+
+      Object.assign(form, {
+        title: app.title,
+        meetingNature: app.meetingNature || 'external',
+        unit: app.unit,
+        industry: app.industry || '',
+        district: app.district || districts.value[0] || '',
+        startDate,
+        meetingTime,
+        leader: app.leader === '无' ? '' : app.leader,
+        customerCount: String(app.customerCount ?? app.headCount ?? ''),
+        internalCount: String(app.internalCount ?? ''),
+      });
+    }
+  }
+});
 
 const dateInputRef = ref<HTMLInputElement | null>(null);
+const timeInputRef = ref<HTMLInputElement | null>(null);
 
 const displayDateLabel = computed(() => form.startDate || '选择参观日期');
+const displayTimeLabel = computed(() => form.meetingTime || '选择开始时间');
 
 /** 禁止选择过去的日期（本地日界线） */
 const minSelectableDate = computed(() => {
@@ -200,104 +224,77 @@ function openDatePicker() {
   el.click();
 }
 
+function openTimePicker() {
+  const el = timeInputRef.value;
+  if (!el) return;
+  if (typeof el.showPicker === 'function') {
+    try {
+      el.showPicker();
+      return;
+    } catch {
+      /* 部分浏览器在无用户手势时抛错，退回 click */
+    }
+  }
+  el.focus();
+  el.click();
+}
+
 const STEPS = ['基本信息', '确认提交'];
 const step = ref(1);
 const submitting = ref(false);
-const checking = ref(false);
-
-const TIME_SLOTS = [
-  { key: 'morning',   name: '上午', range: '09:00 - 12:00', startHour: '09', endHour: '12' },
-  { key: 'afternoon', name: '下午', range: '14:00 - 17:00', startHour: '14', endHour: '17' },
-  { key: 'fullday',   name: '全天', range: '09:00 - 17:00', startHour: '09', endHour: '17' },
-] as const;
-
-type SlotKey = typeof TIME_SLOTS[number]['key'];
+const leaderOpen = ref(false);
+const MEETING_TOPICS = ['党建和创', '方案交流', '合作伙伴', '其他'];
+const MEETING_NATURE_OPTIONS = [
+  { label: '内部', value: 'internal' },
+  { label: '外部', value: 'external' },
+];
 
 const form = reactive({
   title: '',
+  meetingNature: 'external',
   unit: '',
-  industry: INDUSTRIES[0],
-  district: DISTRICTS[0],
-  applicant: '',
-  phone: '',
-  dept: '',
+  industry: '',
+  district: districts.value[0] ?? '',
   startDate: '',
-  timeSlot: '' as SlotKey | '',
-  startHour: '',
-  endHour: '',
+  meetingTime: '',
   leader: '',
-  headCount: '',
-  agenda: '',
+  customerCount: '',
+  internalCount: '',
   remark: '',
-  conflictChecked: false,
-  conflictResult: null as string | null,
 });
 
-const conflictModal = ref(false);
-
-function selectSlot(s: typeof TIME_SLOTS[number]) {
-  // 点击已冲突的 chip → 重新弹出详情，不重置
-  if (form.timeSlot === s.key && conflictState.value === 'error') {
-    conflictModal.value = true;
-    return;
-  }
-  form.timeSlot        = s.key;
-  form.startHour       = s.startHour;
-  form.endHour         = s.endHour;
-  form.conflictChecked = false;
-  form.conflictResult  = null;
-}
-
-const conflictState = computed(() => {
-  if (!form.conflictChecked) return 'idle';
-  return form.conflictResult ? 'error' : 'ok';
+const daySchedules = ref<string[]>([]);
+const dayScheduleHint = computed(() => {
+  if (!daySchedules.value.length) return '';
+  return `当天已有排期：${daySchedules.value.join('；')}。可继续提交。`;
 });
 
-// 选完日期 + 时段后自动检测
 watch(
-  () => [form.startDate, form.timeSlot] as const,
-  async ([date, slot]) => {
-    if (!date || !slot) {
-      form.conflictChecked = false;
-      form.conflictResult  = null;
+  () => [form.startDate, form.meetingTime] as const,
+  async ([date]) => {
+    if (!date) {
+      daySchedules.value = [];
       return;
     }
-    checking.value = true;
-    form.conflictChecked = false;
-    form.conflictResult  = null;
-    form.conflictResult  = await checkTimeConflict(date, form.startHour, form.endHour);
-    form.conflictChecked = true;
-    checking.value = false;
-
-    if (!form.conflictResult) {
-      // 无冲突：chip 变绿，无需额外操作
-    } else {
-      // 有冲突：自动弹窗
-      conflictModal.value = true;
-    }
+    const schedules = await fetchDaySchedules(date).catch(() => []);
+    daySchedules.value = schedules
+      .filter((item) => !editId.value || item.id !== editId.value)
+      .map((item) => `${item.startTime.split(' ')[1] || ''} ${item.title}`)
+      .filter(Boolean);
   }
 );
 
-const approvalChainText = computed(() => {
-  if (form.leader === '总经理') return '部门领导 → 展厅主管 → 总经理（三级）';
-  if (form.leader === '分管副总') return '部门领导 → 展厅主管 → 分管副总（三级）';
-  return '部门领导 → 展厅主管（二级）';
-});
-
-const selectedSlot = computed(() => TIME_SLOTS.find(s => s.key === form.timeSlot));
-
 const summary = computed<[string, string][]>(() => [
   ['会议主题', form.title],
+  ['会议性质', form.meetingNature === 'internal' ? '内部' : '外部'],
   ['来访单位', form.unit],
   ['所属行业', form.industry],
   ['参观日期', form.startDate],
-  ['使用时段', selectedSlot.value ? `${selectedSlot.value.name}（${selectedSlot.value.range}）` : '—'],
-  ['最高领导', form.leader || '—'],
-  ['预计人数', form.headCount || '—'],
-  ['申请部门', form.dept],
-  ['申请人', `${form.applicant}（${form.district}）`],
-  ['联系电话', form.phone],
-  ['简要议程', form.agenda || '—'],
+  ['会议正式开始时间', form.meetingTime || '—'],
+  ['我公司陪同领导', form.leader || '—'],
+  ['客户人数', form.customerCount || '0'],
+  ['自有人员人数', form.internalCount || '0'],
+  ['所属区县', form.district],
 ]);
 
 interface Toast { msg: string; type: 'success' | 'info' | 'error' }
@@ -319,13 +316,12 @@ function notify(msg: string, type: Toast['type'] = 'success') {
   setTimeout(() => (toast.value = null), 2600);
 }
 
-function onBack() { router.back(); }
 function onPrev() {
   if (step.value === 1) router.back();
   else step.value -= 1;
 }
 function onNext() {
-  if (!form.title || !form.unit || !form.startDate || !form.timeSlot || !form.applicant || !form.phone || !form.district) {
+  if (!form.title || !form.meetingNature || !form.unit || !form.startDate || !form.meetingTime || !form.district) {
     notify('请填写所有必填项', 'error');
     return;
   }
@@ -343,8 +339,13 @@ async function onSaveDraft() {
 async function onSubmit() {
   submitting.value = true;
   try {
-    await submitApplication({ ...form });
-    notify(`申请「${form.title}」已提交，等待审批`, 'success');
+    if (isEdit.value) {
+      await resubmitApplication(editId.value!, { ...form });
+      notify(`申请「${form.title}」已重新提交，等待审批`, 'success');
+    } else {
+      await submitApplication({ ...form });
+      notify(`申请「${form.title}」已提交，等待审批`, 'success');
+    }
     setTimeout(() => router.replace('/mine'), 600);
   } catch (e) {
     notify('提交失败，请重试', 'error');
@@ -386,7 +387,7 @@ async function onSubmit() {
 }
 .eh-new__card {
   background: var(--t-surface);
-  border: 1px solid var(--t-border);
+  border: 1px solid var(--t-border-dark);
   border-radius: 8px;
   padding: 20px 16px;
 }
@@ -405,9 +406,9 @@ async function onSubmit() {
 /* 参观日期：背景/圆角/描边与 FancyInput、FancySelect 触发器一致 */
 .eh-new__date-field {
   position: relative;
-  border: 1px solid var(--t-border);
+  border: 1px solid var(--t-border-dark);
   border-radius: 4px;
-  background: var(--t-surface);
+  background: #fffefa;
   box-sizing: border-box;
   transition: border-color 0.15s ease;
   outline: none;
@@ -417,6 +418,7 @@ async function onSubmit() {
 }
 .eh-new__date-field:focus-within {
   border-color: var(--t-text1);
+  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
 }
 .eh-new__date-inner {
   display: flex;
@@ -430,14 +432,14 @@ async function onSubmit() {
   line-height: 1.2;
 }
 .eh-new__date-val {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 400;
   color: var(--t-text1);
 }
 .eh-new__date-empty {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 400;
-  color: var(--t-text3);
+  color: #b0ada6;
 }
 .eh-new__date-meta {
   display: flex;
@@ -453,7 +455,7 @@ async function onSubmit() {
   text-transform: uppercase;
   color: var(--t-text2);
   background: var(--t-bg);
-  border: 1px solid var(--t-border);
+  border: 1px solid var(--t-border-dark);
   border-radius: 4px;
   padding: 3px 6px;
   line-height: 1;
@@ -498,6 +500,96 @@ async function onSubmit() {
   outline: none;
 }
 
+/* 开始时间：规避原生 time 控件在桌面浏览器中的系统样式，视觉与其他表单项保持一致 */
+.eh-new__time-field {
+  position: relative;
+  border: 1px solid var(--t-border-dark);
+  border-radius: 4px;
+  background: #fffefa;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+  outline: none;
+}
+.eh-new__time-field:hover {
+  border-color: var(--t-border-dark);
+}
+.eh-new__time-field:focus-within {
+  border-color: var(--t-text1);
+  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
+}
+.eh-new__time-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 35px;
+  padding: 8px 10px;
+  pointer-events: none;
+  user-select: none;
+  line-height: 1.2;
+}
+.eh-new__time-val {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--t-text1);
+}
+.eh-new__time-empty {
+  font-size: 16px;
+  font-weight: 400;
+  color: #b0ada6;
+}
+.eh-new__time-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0.92;
+}
+.eh-new__time-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+  color: transparent;
+  background: transparent;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  z-index: 1;
+}
+.eh-new__time-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.eh-new__time-input:focus {
+  outline: none;
+}
+
+.eh-new__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border: 1px solid #f5d08a;
+  background: #fff8eb;
+  color: #92400e;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 /* 时段 chip 快选 */
 .eh-new__slots {
   display: flex;
@@ -512,7 +604,7 @@ async function onSubmit() {
   padding: 10px 6px;
   border: 1px solid var(--t-border);
   border-radius: 4px;
-  background: var(--t-surface);
+  background: #fffefa;
   cursor: pointer;
   font-family: inherit;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
@@ -531,7 +623,7 @@ async function onSubmit() {
 }
 .eh-new__slot-range {
   font-size: 10px;
-  color: var(--t-text3);
+  color: var(--t-text2);
   white-space: nowrap;
 }
 .eh-new__slot--on {
@@ -600,7 +692,7 @@ async function onSubmit() {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
 }
 .eh-new__modal-icon {
   width: 52px;
@@ -677,18 +769,6 @@ async function onSubmit() {
 .eh-modal-leave-to .eh-new__modal {
   transform: scale(0.88);
   opacity: 0;
-}
-
-.eh-new__hint {
-  background: var(--t-warning-light);
-  border: 1px solid #92400e33;
-  border-radius: 4px;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: var(--t-warning);
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
 }
 
 .eh-new__success {
@@ -772,5 +852,40 @@ async function onSubmit() {
 .eh-toast-leave-to {
   transform: translateY(-10px);
   opacity: 0;
+}
+.eh-leader-combo {
+  position: relative;
+}
+.eh-leader-combo__drop {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  background: var(--t-surface);
+  border: 1px solid var(--t-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  z-index: 100;
+  overflow: hidden;
+}
+.eh-leader-combo__opt {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--t-text1);
+  cursor: pointer;
+}
+.eh-leader-combo__opt:active {
+  background: var(--t-bg);
+}
+.eh-leader-drop-enter-active {
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.eh-leader-drop-leave-active {
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.eh-leader-drop-enter-from,
+.eh-leader-drop-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 </style>

@@ -62,30 +62,13 @@
 					</div>
 
 					<div class="eh-appr__section">
-						<MonoLabel :style="{ display: 'block', marginBottom: '8px' }">来访客户</MonoLabel>
-						<div style="display:flex;flex-direction:column;gap:6px">
-							<div v-for="(v, i) in sel.visitors" :key="i" class="eh-appr__visitor">
-								<div class="eh-appr__avatar">{{ v.name[0] }}</div>
-								<div style="flex:1">
-									<span style="font-size:13px;font-weight:600;color:var(--t-text1)">{{ v.name }}</span>
-									<span style="font-size:12px;color:var(--t-text3);margin-left:6px">{{ v.title }}</span>
-								</div>
-								<span v-if="v.isStrategic" class="eh-appr__strategic">
-									<Ic n="star" :size="9" color="var(--t-warning)" />{{ v.strategicLevel }}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="eh-appr__section">
 						<MonoLabel :style="{ display: 'block', marginBottom: '10px' }">审批进度</MonoLabel>
 						<ApprovalTimeline :nodes="sel.approvalNodes" />
 					</div>
 
 					<div class="eh-appr__actions">
-						<Btn variant="success" icon="check" v-auth="'eh_apply_approve'" @click="onAction('approve')">审批通过</Btn>
-						<Btn variant="danger" icon="x" v-auth="'eh_apply_reject'" @click="onAction('reject')">驳回申请</Btn>
-						<Btn variant="ghost" icon="send" v-auth="'eh_apply_forward'" @click="onAction('forward')">转交他人</Btn>
+						<Btn variant="success" icon="check" v-auth="'eh_approval_node_edit'" @click="onAction('approve')">审批通过</Btn>
+						<Btn variant="danger" icon="x" v-auth="'eh_approval_node_edit'" @click="onAction('reject')">驳回申请</Btn>
 					</div>
 				</Card>
 			</div>
@@ -93,24 +76,9 @@
 
 		<el-dialog v-model="actionVisible" :title="actionTitle" width="460" :close-on-click-modal="false">
 			<div style="display:flex;flex-direction:column;gap:14px">
-				<div class="eh-appr__alert" :data-type="currentAction === 'approve' ? 'success' : currentAction === 'reject' ? 'danger' : 'info'">
+				<div class="eh-appr__alert" :data-type="currentAction === 'approve' ? 'success' : 'danger'">
 					<Ic :n="currentAction === 'approve' ? 'checkCircle' : 'alertTri'" :size="13" :color="currentAction === 'approve' ? 'var(--t-success)' : 'var(--t-danger)'" />
-					<span>{{ currentAction === 'approve' ? '通过后将自动流转至下一级，申请人收到站内通知。' : currentAction === 'reject' ? '驳回后申请人可查看原因并重新提交。' : '请选择目标审批人。' }}</span>
-				</div>
-				<div v-if="currentAction === 'forward'">
-					<MonoLabel :style="{ display: 'block', marginBottom: '6px' }">目标审批人</MonoLabel>
-					<el-select
-						v-model="targetApprover"
-						filterable
-						remote
-						clearable
-						style="width:100%"
-						placeholder="输入用户名搜索"
-						:remote-method="queryApprovers"
-						:loading="approverLoading"
-					>
-						<el-option v-for="item in approverOptions" :key="item.value" :label="item.label" :value="item.value" />
-					</el-select>
+					<span>{{ currentAction === 'approve' ? '通过后申请将直接完成审批，申请人收到站内通知。' : '驳回后申请人可查看原因并重新提交。' }}</span>
 				</div>
 				<FancyInput :label="currentAction === 'reject' ? '驳回原因' : '审批意见'" :required="currentAction === 'reject'">
 					<textarea v-model="actionComment" :placeholder="currentAction === 'approve' ? '审批意见（选填）' : '请说明原因（必填）'" class="eh-input__field eh-input__field--textarea" rows="4" />
@@ -119,11 +87,11 @@
 			<template #footer>
 				<Btn variant="ghost" @click="actionVisible = false" style="margin-right:8px">取消</Btn>
 				<Btn
-					:variant="currentAction === 'approve' ? 'success' : currentAction === 'reject' ? 'danger' : 'primary'"
-					:disabled="(currentAction === 'reject' && !actionComment.trim()) || (currentAction === 'forward' && !targetApprover)"
+					:variant="currentAction === 'approve' ? 'success' : 'danger'"
+					:disabled="currentAction === 'reject' && !actionComment.trim()"
 					@click="submitAction"
 				>
-					{{ currentAction === 'approve' ? '确认通过' : currentAction === 'reject' ? '确认驳回' : '确认转交' }}
+					{{ currentAction === 'approve' ? '确认通过' : '确认驳回' }}
 				</Btn>
 			</template>
 		</el-dialog>
@@ -132,21 +100,17 @@
 
 <script lang="ts" name="ehapproval" setup>
 import { computed, onMounted, ref } from 'vue';
-import { ElDialog, ElMessage, ElOption, ElSelect } from 'element-plus';
+import { ElDialog, ElMessage } from 'element-plus';
 import { Card, Btn, Badge, Ic, MonoLabel, ApprovalTimeline, FancyInput } from '/@/components/eh';
 import { fetchTodoList, submitAction as submitApprovalAction } from '/@/api/eh/approval';
-import { pageList } from '/@/api/admin/user';
 import type { Application } from '/@/components/eh/mock';
 
 const apps = ref<Application[]>([]);
 const sel = ref<Application | null>(null);
 
 const actionVisible = ref(false);
-const currentAction = ref<'approve' | 'reject' | 'forward'>('approve');
+const currentAction = ref<'approve' | 'reject'>('approve');
 const actionComment = ref('');
-const targetApprover = ref('');
-const approverLoading = ref(false);
-const approverOptions = ref<{ label: string; value: string }[]>([]);
 
 onMounted(() => {
 	loadData();
@@ -171,9 +135,10 @@ function fmtTime(v?: string) {
 
 function toApp(raw: any): Application {
 	return {
-		id: `EH-${raw.id}`,
-		title: raw.title || '-',
-		unit: raw.unit || '-',
+			id: `EH-${raw.id}`,
+			title: raw.title || '-',
+			meetingNature: raw.meetingNature || 'external',
+			unit: raw.unit || '-',
 		industry: raw.industry || '-',
 		district: raw.district || '-',
 		applicant: raw.applicant || '-',
@@ -199,9 +164,11 @@ function toApp(raw: any): Application {
 				comment: n.comment || '',
 			} as any),
 			id: n.id,
-		})),
-		headCount: raw.headCount || 0,
-		agenda: raw.agenda || '',
+			})),
+			headCount: raw.headCount || 0,
+			customerCount: raw.customerCount ?? raw.headCount ?? 0,
+			internalCount: raw.internalCount ?? 0,
+			agenda: raw.agenda || '',
 		created: fmtTime(raw.created),
 		opportunityCode: raw.opportunityCode || '',
 	};
@@ -210,7 +177,7 @@ function toApp(raw: any): Application {
 async function loadData() {
 	try {
 		const res = await fetchTodoList();
-		apps.value = (res.data || []).map(toApp).filter((a: Application) => a.status === 'pending');
+		apps.value = (res.data || []).map(toApp).filter((a: Application) => a.status === 'pending' || a.status === 'rescheduled');
 		sel.value = apps.value[0] || null;
 	} catch (e: any) {
 		ElMessage.error(e?.msg || '加载待审批列表失败');
@@ -218,67 +185,56 @@ async function loadData() {
 }
 
 const pending = computed(() => apps.value);
-const actionTitle = computed(() => (currentAction.value === 'approve' ? '确认审批通过' : currentAction.value === 'reject' ? '驳回申请' : '转交审批'));
+const actionTitle = computed(() => (currentAction.value === 'approve' ? '确认审批通过' : '驳回申请'));
 
 function metas(a: Application) {
 	return [
 		{ icon: 'building', text: a.unit },
-		{ icon: 'calendar', text: `${a.startTime} — ${a.endTime.split(' ')[1]}` },
-		{ icon: 'user', text: `${a.applicant} · ${a.dept}` },
+		{ icon: 'calendar', text: recordStartLabel(a) },
+		{ icon: 'users', text: `客户${a.customerCount ?? a.headCount}人 · 自有${a.internalCount ?? 0}人` },
 	];
 }
 
 function kvRows(a: Application) {
 	return [
 		{ key: '来访单位', value: a.unit, icon: 'building' },
+		{ key: '会议性质', value: a.meetingNature === 'internal' ? '内部' : '外部', icon: 'clipboard' },
 		{ key: '参观日期', value: a.startTime.split(' ')[0], icon: 'calendar' },
-		{ key: '使用时段', value: `${a.startTime.split(' ')[1]} — ${a.endTime.split(' ')[1]}`, icon: 'clock' },
-		{ key: '预计人数', value: `${a.headCount} 人`, icon: 'users' },
-		{ key: '最高领导', value: a.leader, icon: 'user' },
-		{ key: '申请部门', value: a.dept, icon: 'briefcase' },
+		{ key: '会议正式开始时间', value: startTimeOnly(a), icon: 'clock' },
+		{ key: '客户人数', value: `${a.customerCount ?? a.headCount} 人`, icon: 'users' },
+		{ key: '自有人员人数', value: `${a.internalCount ?? 0} 人`, icon: 'users' },
+		{ key: '我公司陪同领导', value: a.leader, icon: 'user' },
 	];
 }
 
-function onAction(t: 'approve' | 'reject' | 'forward') {
-	currentAction.value = t;
-	actionComment.value = '';
-	targetApprover.value = '';
-	actionVisible.value = true;
-	if (t === 'forward') {
-		queryApprovers('');
-	}
+function recordStartLabel(a: Application) {
+	const [date = '—', time = '—'] = a.startTime.split(' ');
+	return `${date} · ${time}开始`;
 }
 
-async function queryApprovers(keyword: string) {
-	approverLoading.value = true;
-	try {
-		const res = await pageList({ current: 1, size: 20, username: keyword });
-		const records = res?.data?.records || [];
-		approverOptions.value = records.map((item: any) => ({
-			label: item.name ? `${item.username} · ${item.name}` : item.username,
-			value: item.username,
-		}));
-	} catch (e: any) {
-		ElMessage.error(e?.msg || '加载审批人失败');
-	} finally {
-		approverLoading.value = false;
-	}
+function startTimeOnly(a: Application) {
+	return a.startTime.split(' ')[1] || '—';
 }
+
+function onAction(t: 'approve' | 'reject') {
+	currentAction.value = t;
+	actionComment.value = '';
+	actionVisible.value = true;
+}
+
 async function submitAction() {
 	if (!sel.value) return;
 	try {
 		const node = sel.value.approvalNodes.find((n: any) => n.action === 'pending' || n.status === 'pending');
 		await submitApprovalAction({
-			// Keep original ID precision (snowflake IDs may exceed JS safe integer range).
 			applyId: sel.value.id.replace('EH-', ''),
 			nodeId: node ? (node as any).id : undefined,
 			action: currentAction.value,
 			comment: actionComment.value,
-			targetApprover: targetApprover.value || undefined,
 		});
 		const name = sel.value.title;
 		actionVisible.value = false;
-		ElMessage.success(currentAction.value === 'approve' ? `「${name}」已通过审批` : currentAction.value === 'reject' ? `「${name}」已驳回` : `「${name}」已转交`);
+		ElMessage.success(currentAction.value === 'approve' ? `「${name}」已通过审批` : `「${name}」已驳回`);
 		await loadData();
 	} catch (e: any) {
 		ElMessage.error(e?.msg || '审批失败');
@@ -342,8 +298,8 @@ async function submitAction() {
 	border-color: var(--t-border-dark);
 }
 .eh-appr__card--active {
-	border-color: var(--t-text1);
-	background: var(--t-surface-warm);
+	border-color: var(--t-accent);
+	background: var(--t-accent-light);
 }
 .eh-appr__card-title {
 	font-size: 13px;
@@ -371,7 +327,7 @@ async function submitAction() {
 	background: var(--t-warning-light);
 	color: var(--t-warning);
 	padding: 2px 7px;
-	border-radius: 3px;
+	border-radius: 6px;
 	font-weight: 600;
 }
 
@@ -435,8 +391,8 @@ async function submitAction() {
 	width: 30px;
 	height: 30px;
 	border-radius: 50%;
-	background: var(--t-text1);
-	color: #fff;
+	background: var(--t-accent);
+	color: #fffaf2;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -453,8 +409,8 @@ async function submitAction() {
 	font-size: 10px;
 	font-weight: 600;
 	padding: 2px 7px;
-	border-radius: 3px;
-	border: 1px solid #92400e33;
+	border-radius: 6px;
+	border: 1px solid var(--t-accent-border);
 }
 .eh-appr__actions {
 	display: flex;

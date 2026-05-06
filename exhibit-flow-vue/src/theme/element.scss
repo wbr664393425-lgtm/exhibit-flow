@@ -90,7 +90,7 @@
 ------------------------------- */
 // 鼠标 hover 时颜色
 .el-menu-hover-bg-color {
-	background-color: var(--next-bg-menuBarActiveColor) !important;
+	background-color: #f3e8d8 !important;
 }
 
 // 默认样式修改
@@ -106,7 +106,7 @@
 
 .el-menu-item,
 .el-sub-menu__title {
-	color: var(--next-bg-menuBarColor) !important;
+	color: #6a5947 !important;
 }
 
 // 修复点击左侧菜单折叠再展开时，宽度不跟随问题
@@ -138,10 +138,13 @@
 .el-sub-menu.is-active .el-sub-menu__title,
 .el-sub-menu:not(.is-opened):hover .el-sub-menu__title {
 	@extend .el-menu-hover-bg-color;
+	color: #8b522a !important;
+	font-weight: 600;
 }
 
 .el-menu-item:hover {
 	@extend .el-menu-hover-bg-color;
+	color: #8b522a !important;
 }
 
 .el-sub-menu.is-active.is-opened .el-sub-menu__title {
@@ -418,18 +421,19 @@ svg {
 
 /* Button 按钮 */
 .el-button {
-	border-radius: 4px;
-	font-weight: 600;
+	border-radius: 8px;
+	font-weight: 500;
 	font-size: 13px;
 	font-family: var(--t-font-sans);
 }
 .el-button--primary {
-	--el-button-bg-color: var(--t-text1);
-	--el-button-border-color: var(--t-text1);
-	--el-button-hover-bg-color: #2d2d2b;
-	--el-button-hover-border-color: #2d2d2b;
-	--el-button-active-bg-color: #000000;
-	--el-button-active-border-color: #000000;
+	--el-button-bg-color: var(--t-accent);
+	--el-button-border-color: var(--t-accent);
+	--el-button-text-color: #faf9f5;
+	--el-button-hover-bg-color: #b85538;
+	--el-button-hover-border-color: #b85538;
+	--el-button-active-bg-color: #a04830;
+	--el-button-active-border-color: #a04830;
 }
 .el-button--danger {
 	--el-button-bg-color: var(--t-danger);
@@ -468,31 +472,31 @@ svg {
 .el-form-item__label {
 	font-size: 12px;
 	color: var(--t-text2);
-	font-weight: 600;
+	font-weight: 500;
 	font-family: var(--t-font-sans);
 }
 .el-input__wrapper {
-	border-radius: 4px;
-	box-shadow: 0 0 0 1px var(--t-border) inset;
+	border-radius: 8px;
+	box-shadow: 0 0 0 1px var(--t-border-dark) inset;
 
 	&:hover {
-		box-shadow: 0 0 0 1px var(--t-border-dark) inset;
+		box-shadow: 0 0 0 1px #c2c0b6 inset;
 	}
 	&.is-focus {
-		box-shadow: 0 0 0 1.5px var(--t-text1) inset !important;
+		box-shadow: 0 0 0 1.5px #3898ec inset !important;
 	}
 }
 .el-textarea__inner {
-	border-radius: 4px;
-	box-shadow: 0 0 0 1px var(--t-border) inset;
+	border-radius: 8px;
+	box-shadow: 0 0 0 1px var(--t-border-dark) inset;
 	font-family: var(--t-font-sans);
 
 	&:focus {
-		box-shadow: 0 0 0 1.5px var(--t-text1) inset;
+		box-shadow: 0 0 0 1.5px #3898ec inset;
 	}
 }
 .el-select .el-input__wrapper {
-	border-radius: 4px;
+	border-radius: 8px;
 }
 
 /* Pagination 分页 */
@@ -501,15 +505,15 @@ svg {
 	--el-pagination-hover-color: var(--t-text1);
 
 	.el-pager li {
-		border-radius: 4px;
+		border-radius: 6px;
 		font-size: 13px;
-		font-weight: 600;
+		font-weight: 500;
 	}
 }
 .el-pagination.is-background .el-pager li.is-active {
-	background-color: var(--t-text1) !important;
-	color: #fff !important;
-	border-radius: 4px;
+	background-color: var(--t-accent) !important;
+	color: #faf9f5 !important;
+	border-radius: 6px;
 }
 
 /* Tag 标签 */
@@ -523,15 +527,16 @@ svg {
 /* Card 卡片 */
 .el-card {
 	border-radius: 8px;
-	border: 1px solid var(--t-border);
-	box-shadow: none;
+	border: 1px solid var(--t-border-dark);
+	box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
+	background: var(--t-surface);
 
 	&:hover {
-		box-shadow: none;
+		box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
 	}
 }
 .el-card__header {
-	border-bottom: 1px solid var(--t-border);
+	border-bottom: 1px solid var(--t-border-dark);
 }
 
 /* Dropdown 下拉 */
@@ -559,8 +564,8 @@ svg {
 	font-weight: 500;
 
 	&.is-selected {
-		color: var(--t-text1);
-		font-weight: 700;
+		color: var(--t-accent);
+		font-weight: 600;
 	}
 }
 

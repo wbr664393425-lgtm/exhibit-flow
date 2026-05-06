@@ -1,6 +1,6 @@
 <template>
 	<div class="layout-logo" v-if="setShowLogo" @click="onThemeConfigChange">
-		<span>{{ themeConfig.globalTitle }}</span>
+		<span>{{ appTitle }}</span>
 	</div>
 	<div class="layout-logo-size" v-else @click="onThemeConfigChange">
 		<img :src="logoMini" class="layout-logo-size-img" />
@@ -14,6 +14,7 @@ import logoMini from '/@/assets/logo-mini.svg';
 // 定义变量内容
 const storesThemeConfig = useThemeConfig();
 const { themeConfig } = storeToRefs(storesThemeConfig);
+const appTitle = '展厅申请后台管理系统';
 
 // 设置 logo 的显示。classic 经典布局默认显示 logo
 const setShowLogo = computed(() => {
@@ -29,12 +30,12 @@ const onThemeConfigChange = () => {
 
 <style scoped lang="scss">
 .layout-logo {
-	width: 380px;
+	width: 100%;
 	height: 50px;
 	display: flex;
 	align-items: center;
 	justify-content: start;
-	padding: 0 20px;
+	padding: 0 16px;
 	box-shadow: rgb(0 21 41 / 2%) 0px 1px 4px;
 	color: var(--next-bg-menuBarColor);
 	font-size: 16px;
@@ -43,7 +44,7 @@ const onThemeConfigChange = () => {
 	span {
 		white-space: nowrap;
 		display: inline-block;
-		font-size: 18px;
+		font-size: 16px;
 		font-weight: 700;
 		white-space: nowrap;
 		overflow: hidden;

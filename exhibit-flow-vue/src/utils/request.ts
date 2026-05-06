@@ -1,8 +1,30 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { Session } from '/@/utils/storage';
-import { useMessageBox } from '/@/hooks/message';
+import { useMessage } from '/@/hooks/message';
 import qs from 'qs';
 import other from './other';
+
+let authRedirecting = false;
+
+function buildLoginUrl() {
+	const current = window.location.hash?.startsWith('#') ? window.location.hash.slice(1) : window.location.pathname + window.location.search;
+	if (!current || current.startsWith('/login')) {
+		return '/#/login';
+	}
+	const [path, queryString = ''] = current.split('?');
+	const params = Object.fromEntries(new URLSearchParams(queryString));
+	return `/#/login?redirect=${encodeURIComponent(path || '/')}&params=${encodeURIComponent(JSON.stringify(params))}`;
+}
+
+function redirectToLogin() {
+	if (authRedirecting) return;
+	authRedirecting = true;
+	useMessage().warning('登录状态已过期，请重新登录');
+	Session.clear();
+	setTimeout(() => {
+		window.location.replace(buildLoginUrl());
+	}, 600);
+}
 
 /**
  * 创建并配置一个 Axios 实例对象
@@ -76,17 +98,12 @@ const handleResponse = (response: AxiosResponse<any>) => {
  * 添加 Axios 的响应拦截器，用于全局响应结果处理
  */
 service.interceptors.response.use(handleResponse, (error) => {
-	const status = Number(error.response.status) || 200;
-	if (status === 424) {
-		useMessageBox()
-			.confirm('令牌状态已过期，请点击重新登录')
-			.then(() => {
-				Session.clear(); // 清除浏览器全部临时缓存
-				window.location.href = '/'; // 去登录页
-				return;
-			});
+	const status = Number(error.response?.status) || 200;
+	const skipToken = Boolean(error.config?.headers?.skipToken);
+	if ((status === 401 || status === 424) && !skipToken) {
+		redirectToLogin();
 	}
-	return Promise.reject(error.response.data);
+	return Promise.reject(error.response?.data || error);
 });
 
 // 常用header

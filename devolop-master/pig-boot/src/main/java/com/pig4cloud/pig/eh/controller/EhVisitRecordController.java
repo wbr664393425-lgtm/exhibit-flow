@@ -30,6 +30,9 @@ import com.pig4cloud.pig.eh.dto.VisitRecordUpsertDTO;
 import com.pig4cloud.pig.eh.entity.EhVisitRecord;
 import com.pig4cloud.pig.eh.service.EhAdminAggregateService;
 import com.pig4cloud.pig.eh.service.EhVisitRecordService;
+import com.pig4cloud.pig.eh.vo.EhVisitRecordExportVO;
+import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -105,6 +108,14 @@ public class EhVisitRecordController {
 	@Operation(summary = "归还签收")
 	public R returnSign(@RequestBody ReturnSignDTO dto) {
 		return R.ok(ehAdminAggregateService.signVisitReturn(dto));
+	}
+
+	@ResponseExcel(name = "参观留存记录")
+	@GetMapping("/export")
+	@HasPermission("eh_visit_record_export")
+	@Operation(summary = "导出参观留存记录")
+	public List<EhVisitRecordExportVO> export() {
+		return ehAdminAggregateService.exportVisitRecordList();
 	}
 
 }

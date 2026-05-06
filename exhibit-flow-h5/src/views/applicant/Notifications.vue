@@ -13,8 +13,8 @@
         v-for="n in items"
         :key="n.id"
         class="eh-notif__item"
-        :class="{ 'eh-notif__item--read': n.read }"
-        @click="onReadOne(n.id)"
+        :class="{ 'eh-notif__item--read': n.read, 'eh-notif__item--linked': !!n.applyId }"
+        @click="onItemClick(n)"
       >
         <div class="eh-notif__avatar" :style="{ background: colorMap[n.type].bg, borderColor: colorMap[n.type].c + '22' }">
           <Ic :n="n.icon" :size="14" :color="colorMap[n.type].c" />
@@ -27,6 +27,7 @@
           <div class="eh-notif__text">{{ n.body }}</div>
           <MonoLabel :style="{ fontSize: '9px' }">{{ n.time }}</MonoLabel>
         </div>
+        <Ic v-if="n.applyId" n="chevronRight" :size="12" color="var(--t-text3)" style="flex-shrink:0;align-self:center" />
       </div>
     </div>
   </div>
@@ -34,10 +35,12 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { Ic, MonoLabel } from '../../components/eh';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead } from '../../api/eh/notice';
 import type { Notification } from '../../mock/applications';
 
+const router = useRouter();
 const items = ref<Notification[]>([]);
 
 onMounted(async () => {
@@ -54,11 +57,13 @@ const colorMap: Record<Notification['type'], { c: string; bg: string }> = {
   system: { c: 'var(--t-text3)', bg: 'var(--t-bg)' },
 };
 
-async function onReadOne(id: number) {
-  const n = items.value.find((x) => x.id === id);
-  if (n && !n.read) {
+async function onItemClick(n: Notification) {
+  if (!n.read) {
     n.read = true;
-    await markNotificationRead(id);
+    await markNotificationRead(n.id);
+  }
+  if (n.applyId) {
+    router.push(`/apply/${n.applyId}`);
   }
 }
 async function onMarkAll() {
@@ -119,6 +124,9 @@ async function onMarkAll() {
 }
 .eh-notif__item--read {
   background: var(--t-surface);
+}
+.eh-notif__item--linked:active {
+  background: var(--t-bg);
 }
 .eh-notif__avatar {
   width: 32px;

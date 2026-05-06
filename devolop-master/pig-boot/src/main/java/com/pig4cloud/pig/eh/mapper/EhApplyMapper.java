@@ -32,4 +32,6 @@ public interface EhApplyMapper extends BaseMapper<EhApply> {
 
 	List<AdminApplyPageVO> selectAdminApplyBaseList(@Param("status") String status);
 
+	List<AdminApplyPageVO> selectAdminApplyBaseListIn(@Param("statuses") java.util.List<String> statuses);
+
 }

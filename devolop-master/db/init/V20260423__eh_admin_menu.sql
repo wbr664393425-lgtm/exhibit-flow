@@ -38,24 +38,29 @@ INSERT IGNORE INTO `sys_menu`
     (`menu_id`, `name`, `en_name`, `permission`, `path`, `parent_id`, `icon`, `visible`, `sort_order`, `keep_alive`, `embedded`, `menu_type`, `create_by`, `create_time`, `update_by`, `update_time`, `del_flag`)
 VALUES
     -- 申请列表（parent=11001）
-    (30110, '新增申请',   NULL, 'eh_apply_add',     NULL, 11001, NULL, '1', 5, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30110, '新增记录',   NULL, 'eh_apply_add',     NULL, 11001, NULL, '1', 5, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
     (30111, '编辑申请',   NULL, 'eh_apply_edit',    NULL, 11001, NULL, '1', 6, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
     (30112, '删除申请',   NULL, 'eh_apply_del',     NULL, 11001, NULL, '1', 7, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
     (30113, '导出申请',   NULL, 'eh_apply_export',  NULL, 11001, NULL, '1', 8, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
 
     -- 审批节点（parent=11002）
-    (30120, '审批通过',   NULL, 'eh_apply_approve', NULL, 11002, NULL, '1', 1, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
-    (30121, '驳回申请',   NULL, 'eh_apply_reject',  NULL, 11002, NULL, '1', 2, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
-    (30122, '转交审批',   NULL, 'eh_apply_forward', NULL, 11002, NULL, '1', 3, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30120, '查看审批',   NULL, 'eh_approval_node_view', NULL, 11002, NULL, '1', 1, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30121, '处理审批',   NULL, 'eh_approval_node_edit', NULL, 11002, NULL, '1', 2, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30122, '删除审批',   NULL, 'eh_approval_node_del',  NULL, 11002, NULL, '1', 3, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30123, '新增审批',   NULL, 'eh_approval_node_add',  NULL, 11002, NULL, '1', 4, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
 
     -- 留存记录（parent=12001）
-    (30130, '录入留存',   NULL, 'eh_visit_record',  NULL, 12001, NULL, '1', 5, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
-    (30131, '归还签收',   NULL, 'eh_visit_return',  NULL, 12001, NULL, '1', 6, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
-    (30132, '编辑留存',   NULL, 'eh_visit_edit',    NULL, 12001, NULL, '1', 7, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30130, '查看留存',   NULL, 'eh_visit_record_view', NULL, 12001, NULL, '1', 5, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30131, '录入留存',   NULL, 'eh_visit_record_add',  NULL, 12001, NULL, '1', 6, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30132, '编辑留存',   NULL, 'eh_visit_record_edit', NULL, 12001, NULL, '1', 7, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30133, '删除留存',   NULL, 'eh_visit_record_del',    NULL, 12001, NULL, '1', 8, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30134, '导出留存',   NULL, 'eh_visit_record_export', NULL, 12001, NULL, '1', 9, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
 
     -- 现场照片（parent=12002）
-    (30140, '上传照片',   NULL, 'eh_photo_upload',  NULL, 12002, NULL, '1', 5, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
-    (30141, '删除照片',   NULL, 'eh_photo_del',     NULL, 12002, NULL, '1', 6, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30140, '查看照片',   NULL, 'eh_visit_photo_view', NULL, 12002, NULL, '1', 5, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30141, '上传照片',   NULL, 'eh_visit_photo_add',  NULL, 12002, NULL, '1', 6, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30142, '编辑照片',   NULL, 'eh_visit_photo_edit', NULL, 12002, NULL, '1', 7, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
+    (30143, '删除照片',   NULL, 'eh_visit_photo_del',  NULL, 12002, NULL, '1', 8, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
 
     -- 统计看板（parent=30200）
     (30210, '导出Excel',  NULL, 'eh_dashboard_export_excel', NULL, 30200, NULL, '1', 1, '0', NULL, '1', 'admin', NOW(), 'admin', NOW(), '0'),
@@ -78,9 +83,9 @@ INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
     -- ==== 超级管理员：新增部分 ====
     (1, 30100), (1, 30200),
     (1, 30110), (1, 30111), (1, 30112), (1, 30113),
-    (1, 30120), (1, 30121), (1, 30122),
-    (1, 30130), (1, 30131), (1, 30132),
-    (1, 30140), (1, 30141),
+    (1, 30120), (1, 30121), (1, 30122), (1, 30123),
+    (1, 30130), (1, 30131), (1, 30132), (1, 30133), (1, 30134),
+    (1, 30140), (1, 30141), (1, 30142), (1, 30143),
     (1, 30210), (1, 30211),
 
     -- ==== 展厅管理员：既有目录 ====
@@ -100,7 +105,15 @@ INSERT IGNORE INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
     (5, 30100), (5, 30200),
     -- ==== 展厅管理员：新增按钮 ====
     (5, 30110), (5, 30111), (5, 30112), (5, 30113),
-    (5, 30120), (5, 30121), (5, 30122),
-    (5, 30130), (5, 30131), (5, 30132),
-    (5, 30140), (5, 30141),
+    (5, 30120), (5, 30121), (5, 30122), (5, 30123),
+    (5, 30130), (5, 30131), (5, 30132), (5, 30133), (5, 30134),
+    (5, 30140), (5, 30141), (5, 30142), (5, 30143),
     (5, 30210), (5, 30211);
+
+UPDATE `sys_menu`
+SET `name` = '新增记录', `update_by` = 'admin', `update_time` = NOW()
+WHERE `permission` = 'eh_apply_add';
+
+UPDATE `sys_menu`
+SET `visible` = '0', `update_by` = 'admin', `update_time` = NOW()
+WHERE `menu_id` = 12001 OR `path` = '/eh/visit/index';

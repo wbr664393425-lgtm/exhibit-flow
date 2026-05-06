@@ -35,6 +35,7 @@ export async function fetchNotifications(): Promise<Notification[]> {
       body: item.content || '',
       time: fmtTime(item.createTime),
       read: item.readFlag === '1',
+      applyId: item.applyId ? String(item.applyId) : undefined,
     };
   });
 }

@@ -13,6 +13,9 @@ public class VisitPhotoBatchDTO {
 	@Schema(description = "参观留存ID")
 	private Long visitId;
 
+	@Schema(description = "申请ID")
+	private Long applyId;
+
 	@Schema(description = "照片列表")
 	private List<PhotoDTO> photos = new ArrayList<>();
 

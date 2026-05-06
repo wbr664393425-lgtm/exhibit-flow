@@ -14,8 +14,12 @@ public class AdminVisitPhotoVO {
 	private Long applyId;
 	private Long visitId;
 	private String title;
+	private String unit;
+	private String industry;
 	private String status;
 	private LocalDateTime startTime;
+	private Integer customerCount;
+	private Integer internalCount;
 	private Integer photoCount;
 	private List<PhotoVO> photos = new ArrayList<>();
 

@@ -51,6 +51,8 @@ public interface EhApplyService extends IService<EhApply> {
 
 	boolean updateAndSubmit(Long id, ApplyFormDTO dto);
 
+	boolean updateAgenda(Long id, String agenda);
+
 	boolean cancelApply(Long id, String reason);
 
 	boolean rescheduleApply(Long id, ApplyRescheduleDTO dto);

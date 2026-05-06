@@ -1,27 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Intercom-inspired warm tokens */
-  --t-bg: #faf9f6;
-  --t-surface: #ffffff;
-  --t-surface-warm: #f5f4f0;
-  --t-border: #dedbd6;
-  --t-border-dark: #c8c4be;
-  --t-text1: #111111;
-  --t-text2: #626260;
-  --t-text3: #9c9fa5;
-  --t-accent: #ff5600;
-  --t-accent-light: #fff2eb;
-  --t-accent-border: #ffcfb3;
+  /* Claude (Anthropic) design tokens */
+  --t-bg: #f5f4ed;
+  --t-surface: #faf9f5;
+  --t-surface-warm: #f0eee6;
+  --t-border: #e4dfd3;
+  --t-border-dark: #c9c1b3;
+  --t-text1: #141413;
+  --t-text2: #5e5d59;
+  --t-text3: #6f6d66;
+  --t-accent: #c96442;
+  --t-accent-light: #fdf0ea;
+  --t-accent-border: #f0c0a0;
   --t-success: #2c6415;
   --t-success-light: #f0f9eb;
   --t-warning: #92400e;
   --t-warning-light: #fffbeb;
-  --t-danger: #c41c1c;
+  --t-danger: #b53333;
   --t-danger-light: #fef2f2;
-  --t-sidebar: #111111;
+  --t-sidebar: #141413;
 
-  --t-font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  --t-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
   --t-font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 
   font-family: var(--t-font-sans);
@@ -46,6 +46,8 @@ body {
   background: var(--t-bg);
   color: var(--t-text1);
   font-family: var(--t-font-sans);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 #app {
@@ -70,7 +72,7 @@ body {
     min-height: calc(100vh - 72px);
     background: var(--t-bg);
     border-radius: 16px;
-    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     position: relative;
   }
@@ -81,6 +83,18 @@ select,
 textarea,
 button {
   font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8a867d;
+  opacity: 1;
 }
 
 ::-webkit-scrollbar {

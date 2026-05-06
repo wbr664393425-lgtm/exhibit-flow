@@ -42,6 +42,9 @@ public class EhVisitPhoto extends Model<EhVisitPhoto> {
 	@Schema(description = "关联参观留存ID")
 	private Long visitId;
 
+	@Schema(description = "关联申请ID")
+	private Long applyId;
+
 	@Schema(description = "图片URL")
 	private String fileUrl;
 

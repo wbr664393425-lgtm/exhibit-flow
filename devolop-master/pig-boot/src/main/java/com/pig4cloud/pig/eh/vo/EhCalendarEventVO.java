@@ -9,6 +9,10 @@ public class EhCalendarEventVO {
 
 	private String title;
 
+	private String unit;
+
+	private String district;
+
 	private String start;
 
 	private String startTime;

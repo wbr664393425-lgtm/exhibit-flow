@@ -5,7 +5,7 @@
         <component :is="Component" />
       </router-view>
     </div>
-    <div class="eh-tabbar">
+    <div v-if="!route.meta.hideTabbar" class="eh-tabbar">
       <button
         v-for="t in tabs"
         :key="t.id"
@@ -52,7 +52,7 @@ function go(t: { path: string }) {
 .eh-layout__content {
   flex: 1;
   overflow-y: auto;
-  padding-bottom: 56px;
+  padding-bottom: v-bind("route.meta.hideTabbar ? '0' : '56px'");
 }
 .eh-tabbar {
   position: fixed;

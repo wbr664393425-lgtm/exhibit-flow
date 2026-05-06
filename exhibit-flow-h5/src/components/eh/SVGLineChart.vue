@@ -2,8 +2,8 @@
   <svg :viewBox="`0 0 ${W} ${h}`" :style="{ width: '100%', height: `${h}px` }" preserveAspectRatio="xMidYMid meet">
     <defs>
       <linearGradient id="eh-line-grad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#ff5600" stop-opacity="0.15" />
-        <stop offset="100%" stop-color="#ff5600" stop-opacity="0" />
+        <stop offset="0%" stop-color="#c96442" stop-opacity="0.15" />
+        <stop offset="100%" stop-color="#c96442" stop-opacity="0" />
       </linearGradient>
     </defs>
     <line
@@ -13,7 +13,7 @@
       :y1="(PT + cH * (1 - r)).toFixed(1)"
       :x2="PL + cW"
       :y2="(PT + cH * (1 - r)).toFixed(1)"
-      stroke="#dedbd6"
+      stroke="#e8e6dc"
       stroke-width="0.8"
     />
     <line
@@ -23,7 +23,7 @@
       :y1="PT"
       :x2="px(i).toFixed(1)"
       :y2="PT + cH"
-      stroke="#dedbd6"
+      stroke="#e8e6dc"
       stroke-width="0.5"
       stroke-dasharray="3,3"
     />
@@ -32,7 +32,7 @@
       v-if="path2"
       :d="path2"
       fill="none"
-      stroke="#dedbd6"
+      stroke="#e8e6dc"
       stroke-width="1.5"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -42,7 +42,7 @@
       v-if="path1"
       :d="path1"
       fill="none"
-      stroke="#ff5600"
+      stroke="#c96442"
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
@@ -53,7 +53,7 @@
         :cx="px(i).toFixed(1)"
         :cy="py(d.v1).toFixed(1)"
         r="3"
-        fill="#ff5600"
+        fill="#c96442"
         stroke="#ffffff"
         stroke-width="1.5"
       />
@@ -65,7 +65,7 @@
       :y="h - 6"
       text-anchor="middle"
       font-size="9"
-      fill="#9c9fa5"
+      fill="#87867f"
       font-family="inherit"
     >{{ d.label }}</text>
     <text
@@ -75,7 +75,7 @@
       :y="(py(v) + 3).toFixed(1)"
       text-anchor="end"
       font-size="9"
-      fill="#9c9fa5"
+      fill="#87867f"
       font-family="inherit"
     >{{ v }}</text>
   </svg>

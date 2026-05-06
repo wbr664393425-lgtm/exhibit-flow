@@ -5,7 +5,6 @@
         <h2 class="eh-mine__title">我的申请</h2>
         <p class="eh-mine__sub">共 {{ apps.length }} 条记录</p>
       </div>
-      <Btn variant="primary" size="sm" icon="plus" @click="router.push('/apply/new')">新建</Btn>
     </div>
 
     <div class="eh-mine__filters">
@@ -38,10 +37,10 @@
             <Ic n="building" :size="11" color="var(--t-text3)" />{{ a.unit }}
           </span>
           <span class="eh-mine__meta-line">
-            <Ic n="calendar" :size="11" color="var(--t-text3)" />{{ a.startTime }} — {{ a.endTime.split(' ')[1] }}
+            <Ic n="calendar" :size="11" color="var(--t-text3)" />{{ a.startTime }}
           </span>
           <span class="eh-mine__meta-line">
-            <Ic n="users" :size="11" color="var(--t-text3)" />{{ a.headCount }}人
+            <Ic n="users" :size="11" color="var(--t-text3)" />客户{{ a.customerCount ?? a.headCount }}人 / 自有{{ a.internalCount ?? 0 }}人
           </span>
         </div>
         <div v-if="a.status === 'pending'" class="eh-mine__chain">
@@ -51,6 +50,9 @@
           </template>
         </div>
       </div>
+      <button v-if="hasMore" class="eh-mine__more" :disabled="loadingMore" @click="loadMore">
+        {{ loadingMore ? '加载中...' : '加载更多' }}
+      </button>
     </div>
   </div>
 </template>
@@ -59,16 +61,22 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Badge, Btn, Ic } from '../../components/eh';
-import { fetchMyApplications } from '../../api/eh/apply';
+import { fetchMyApplicationsPage } from '../../api/eh/apply';
 import type { Application } from '../../mock/applications';
 
 const router = useRouter();
 const apps = ref<Application[]>([]);
+const current = ref(1);
+const pageSize = 10;
+const total = ref(0);
+const loadingMore = ref(false);
 const filter = ref<'all' | 'pending' | 'approved' | 'completed' | 'rejected'>('all');
 
 onMounted(async () => {
-  apps.value = await fetchMyApplications();
+  await loadPage(1, true);
 });
+
+const hasMore = computed(() => apps.value.length < total.value);
 
 const filters = computed(() => [
   { key: 'all' as const, label: '全部', count: apps.value.length },
@@ -81,6 +89,23 @@ const filters = computed(() => [
 const shown = computed(() =>
   filter.value === 'all' ? apps.value : apps.value.filter((a) => a.status === filter.value)
 );
+
+async function loadPage(page: number, replace = false) {
+  const pageData = await fetchMyApplicationsPage(page, pageSize);
+  current.value = pageData.current;
+  total.value = pageData.total;
+  apps.value = replace ? pageData.records : apps.value.concat(pageData.records);
+}
+
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return;
+  loadingMore.value = true;
+  try {
+    await loadPage(current.value + 1);
+  } finally {
+    loadingMore.value = false;
+  }
+}
 </script>
 
 <style scoped>
@@ -158,6 +183,20 @@ const shown = computed(() =>
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+.eh-mine__more {
+  margin-top: 6px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid var(--t-border);
+  background: var(--t-surface);
+  color: var(--t-text2);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+}
+.eh-mine__more:disabled {
+  opacity: 0.65;
 }
 .eh-mine__card {
   background: var(--t-surface);

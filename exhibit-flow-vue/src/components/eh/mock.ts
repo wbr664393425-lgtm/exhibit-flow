@@ -14,6 +14,13 @@ export interface ApprovalNodeItem {
 	time: string | null;
 	comment: string;
 }
+export interface ApplyHistoryEvent {
+	eventType: 'submit' | 'resubmit' | 'approve' | 'reject' | 'reschedule' | 'cancel' | string;
+	eventDesc: string;
+	operator: string;
+	remark: string | null;
+	eventTime: string;
+}
 export interface VisitRecord {
 	actualStart: string;
 	actualEnd: string;
@@ -26,6 +33,7 @@ export interface VisitRecord {
 export interface Application {
 	id: string;
 	title: string;
+	meetingNature: 'internal' | 'external' | string;
 	unit: string;
 	industry: string;
 	district: string;
@@ -40,16 +48,20 @@ export interface Application {
 	status: ApplicationStatus;
 	approvalNodes: ApprovalNodeItem[];
 	headCount: number;
+	customerCount: number;
+	internalCount: number;
 	agenda: string;
 	created: string;
 	opportunityCode?: string;
 	visitRecord?: VisitRecord;
+	history?: ApplyHistoryEvent[];
 }
 
 export const MOCK_APPLICATIONS: Application[] = [
 	{
 		id: 'EH-2026-0421',
 		title: '华为技术有限公司参观接待',
+		meetingNature: 'external',
 		unit: '华为技术有限公司',
 		industry: '信息技术',
 		district: '天河区',
@@ -71,6 +83,8 @@ export const MOCK_APPLICATIONS: Application[] = [
 			{ role: '分管副总', name: '王副总', action: 'waiting', time: null, comment: '' },
 		],
 		headCount: 8,
+		customerCount: 8,
+		internalCount: 0,
 		agenda: '参观5G智慧园区展示区，重点介绍政企解决方案',
 		created: '2026-04-22 09:30',
 		opportunityCode: '',
@@ -78,6 +92,7 @@ export const MOCK_APPLICATIONS: Application[] = [
 	{
 		id: 'EH-2026-0415',
 		title: '广州市政府采购考察团',
+		meetingNature: 'external',
 		unit: '广州市政府采购中心',
 		industry: '政府机构',
 		district: '越秀区',
@@ -96,6 +111,8 @@ export const MOCK_APPLICATIONS: Application[] = [
 			{ role: '总经理', name: '孙总', action: 'approved', time: '2026-04-17 09:00', comment: '同意' },
 		],
 		headCount: 12,
+		customerCount: 12,
+		internalCount: 0,
 		agenda: '政府数字化转型方案演示',
 		created: '2026-04-15 16:20',
 		opportunityCode: 'OPP-GZ-2026-0312',
@@ -104,6 +121,7 @@ export const MOCK_APPLICATIONS: Application[] = [
 	{
 		id: 'EH-2026-0408',
 		title: '中建集团智慧建造参观',
+		meetingNature: 'external',
 		unit: '中国建筑集团有限公司',
 		industry: '建筑工程',
 		district: '海珠区',
@@ -124,6 +142,8 @@ export const MOCK_APPLICATIONS: Application[] = [
 			{ role: '展厅主管', name: '刘主管', action: 'rejected', time: '2026-04-09 15:00', comment: '该时段已有安排，请改期' },
 		],
 		headCount: 6,
+		customerCount: 6,
+		internalCount: 0,
 		agenda: '建筑行业物联网、智慧工地解决方案演示',
 		created: '2026-04-08 14:00',
 		opportunityCode: '',
@@ -131,6 +151,7 @@ export const MOCK_APPLICATIONS: Application[] = [
 	{
 		id: 'EH-2026-0430',
 		title: '深圳腾讯科技参观接待',
+		meetingNature: 'external',
 		unit: '腾讯科技（深圳）有限公司',
 		industry: '互联网',
 		district: '番禺区',
@@ -148,6 +169,8 @@ export const MOCK_APPLICATIONS: Application[] = [
 			{ role: '展厅主管', name: '刘主管', action: 'approved', time: '2026-04-23 11:30', comment: '已安排' },
 		],
 		headCount: 4,
+		customerCount: 4,
+		internalCount: 0,
 		agenda: '云计算、CDN产品介绍',
 		created: '2026-04-22 16:00',
 		opportunityCode: '',
@@ -164,6 +187,6 @@ export const MOCK_CALENDAR = [
 
 export const SERVICES = ['横幅打印', '茶水', '合影', '摄影', '车辆接送'];
 export const INDUSTRIES = ['信息技术', '政府机构', '金融保险', '建筑工程', '制造业', '能源电力', '互联网', '教育医疗', '商业零售', '其他'];
-export const DISTRICTS = ['天河区', '越秀区', '荔湾区', '海珠区', '白云区', '黄埔区', '番禺区', '花都区', '增城区', '从化区', '南沙区'];
+export const DISTRICTS: string[] = [];
 export const LEADERS = ['无', '部门副总', '分管副总', '总经理'];
 export const DEPTS = ['政企客户部', '公共事业部', '家庭客户部', '市场部', '综合部'];

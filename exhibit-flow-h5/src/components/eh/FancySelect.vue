@@ -102,19 +102,18 @@ function pick(val: string | number) {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--t-border);
+  border: 1px solid var(--t-border-dark);
   border-radius: 4px;
   padding: 8px 10px;
-  font-size: 13px;
-  background: var(--t-surface);
+  font-size: 16px;
+  background: #fffefa;
   cursor: pointer;
   box-sizing: border-box;
   transition: border-color 0.15s;
-  min-height: 35px;
-  line-height: 1.2;
 }
 .eh-select__trigger--open {
   border-color: var(--t-text1);
+  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
 }
 .eh-select__trigger--disabled {
   background: var(--t-bg);
@@ -130,7 +129,7 @@ function pick(val: string | number) {
   white-space: nowrap;
 }
 .eh-select__ph {
-  color: var(--t-text3);
+  color: #b0ada6;
   flex: 1;
 }
 .eh-select__chevron {

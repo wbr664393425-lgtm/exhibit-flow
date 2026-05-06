@@ -34,6 +34,6 @@ export default {
 		title: '请选择租户，点击此处',
 		description: '请选择租户，只需要在第一次使用时进行选择。',
 	},
-	signInText: '欢迎使用后台管理系统！',
+	signInText: '欢迎使用展厅申请后台管理系统！',
 	browserMsgText: '* 温馨提示：建议使用谷歌、Microsoft Edge，版本 79.0.1072.62 及以上浏览器，360浏览器请使用极速模式',
 };

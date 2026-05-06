@@ -57,28 +57,48 @@
       <ApprovalTimeline :nodes="app.approvalNodes" />
     </div>
 
-    <!-- 客户 -->
-    <div v-else-if="tab === 'visitors'" class="eh-detail__visitors">
-      <div v-for="(v, i) in app.visitors" :key="i" class="eh-detail__visitor">
-        <div class="eh-detail__avatar">{{ v.name[0] }}</div>
-        <div class="eh-detail__visitor-body">
-          <span class="eh-detail__visitor-name">{{ v.name }}</span>
-          <span class="eh-detail__visitor-title">{{ v.title }}</span>
+    <!-- 审批历史 -->
+    <div v-else-if="tab === 'history'" class="eh-detail__history">
+      <div v-if="!app.history || app.history.length === 0" class="eh-detail__history-empty">
+        <Ic n="clock" :size="32" color="var(--t-text3)" />
+        <p>暂无历史记录</p>
+      </div>
+      <div v-else class="eh-detail__timeline">
+        <div
+          v-for="(evt, idx) in app.history"
+          :key="idx"
+          class="eh-detail__tl-item"
+        >
+          <div class="eh-detail__tl-left">
+            <div class="eh-detail__tl-dot" :data-type="evt.eventType"></div>
+            <div v-if="idx < app.history.length - 1" class="eh-detail__tl-line"></div>
+          </div>
+          <div class="eh-detail__tl-body">
+            <div class="eh-detail__tl-head">
+              <span class="eh-detail__tl-tag" :data-type="evt.eventType">{{ historyLabel(evt.eventType) }}</span>
+              <MonoLabel>{{ evt.eventTime }}</MonoLabel>
+            </div>
+            <div class="eh-detail__tl-desc">{{ evt.eventDesc }}</div>
+            <div v-if="evt.operator" class="eh-detail__tl-meta">操作人：{{ evt.operator }}</div>
+            <div v-if="evt.remark" class="eh-detail__tl-remark">{{ evt.remark }}</div>
+          </div>
         </div>
-        <span v-if="v.isStrategic" class="eh-detail__strategic">
-          <Ic n="star" :size="10" color="var(--t-warning)" />{{ v.strategicLevel }}
-        </span>
       </div>
     </div>
 
     <!-- 操作栏 -->
-    <div v-if="canAct" class="eh-detail__action-bar">
-      <Btn v-if="app.status === 'pending' || app.status === 'approved'" variant="outline" size="md" icon="rotate" @click="showReschedule = true">
-        申请改期
+    <div v-if="canAct || app.status === 'rejected'" class="eh-detail__action-bar">
+      <Btn v-if="app.status === 'rejected'" variant="primary" size="md" icon="send" @click="router.push(`/apply/edit/${app.id}`)">
+        重新提交申请
       </Btn>
-      <Btn variant="ghost" size="md" icon="xCircle" :style="{ color: 'var(--t-danger)', borderColor: '#c41c1c44' }" @click="showCancel = true">
-        取消申请
-      </Btn>
+      <template v-if="canAct">
+        <Btn v-if="app.status === 'pending' || app.status === 'approved'" variant="outline" size="md" icon="rotate" @click="showReschedule = true">
+          申请改期
+        </Btn>
+        <Btn variant="ghost" size="md" icon="xCircle" :style="{ color: 'var(--t-danger)', borderColor: '#c41c1c44' }" @click="showCancel = true">
+          取消申请
+        </Btn>
+      </template>
     </div>
 
     <!-- 取消弹层 -->
@@ -95,7 +115,7 @@
           </div>
           <div class="eh-modal__info">
             <b>{{ app.title }}</b>
-            <div>{{ app.startTime }} — {{ app.endTime.split(' ')[1] }}</div>
+            <div>会议正式开始时间：{{ appStartLabel(app) }}</div>
           </div>
           <FancyInput label="取消原因" required>
             <textarea v-model="cancelReason" placeholder="请说明取消原因（必填）" class="eh-input__field eh-input__field--textarea" rows="3" />
@@ -117,35 +137,18 @@
         </div>
         <div class="eh-modal__content">
           <div class="eh-modal__info">
-            <MonoLabel :style="{ display: 'block', marginBottom: '4px' }">原时段</MonoLabel>
-            <span>{{ app.startTime }} — {{ app.endTime.split(' ')[1] }}</span>
+            <MonoLabel :style="{ display: 'block', marginBottom: '4px' }">原会议正式开始时间</MonoLabel>
+            <span>{{ appStartLabel(app) }}</span>
           </div>
           <FancyInput label="新参观日期" required>
             <input type="date" v-model="rescheduleForm.newDate" class="eh-input__field" :min="todayYmd" />
           </FancyInput>
-          <FancyInput label="新使用时段" required>
-            <div class="eh-modal__slots">
-              <button
-                v-for="s in timeSlots"
-                :key="s.key"
-                type="button"
-                class="eh-modal__slot"
-                :class="{
-                  'eh-modal__slot--on': rescheduleForm.timeSlot === s.key && rescheduleConflictState === 'idle' && !rescheduleChecking,
-                  'eh-modal__slot--checking': rescheduleForm.timeSlot === s.key && rescheduleChecking,
-                  'eh-modal__slot--ok': rescheduleForm.timeSlot === s.key && rescheduleConflictState === 'ok',
-                  'eh-modal__slot--err': rescheduleForm.timeSlot === s.key && rescheduleConflictState === 'error',
-                }"
-                @click="setRescheduleSlot(s.key)"
-              >
-                <span class="eh-modal__slot-name">{{ s.name }}</span>
-                <span class="eh-modal__slot-range">{{ s.range }}</span>
-              </button>
-            </div>
+          <FancyInput label="新会议正式开始时间" required>
+            <input type="time" v-model="rescheduleForm.newTime" class="eh-input__field" />
           </FancyInput>
           <div v-if="rescheduleConflictState === 'error' && rescheduleConflictMsg" class="eh-modal__alert eh-modal__alert--danger">
             <Ic n="alertTri" :size="13" color="var(--t-danger)" />
-            <span>所选时段冲突：{{ rescheduleConflictMsg }}</span>
+            <span>所选开始时间冲突：{{ rescheduleConflictMsg }}</span>
           </div>
           <div class="eh-modal__alert eh-modal__alert--accent">
             <Ic n="info" :size="13" color="var(--t-accent)" />
@@ -187,28 +190,20 @@ const route = useRoute();
 const router = useRouter();
 
 const app = ref<Application | undefined>();
-const tab = ref<'info' | 'approval' | 'visitors'>('info');
+const tab = ref<'info' | 'approval' | 'history'>('info');
 const tabs = [
   { key: 'info' as const, label: '申请信息' },
   { key: 'approval' as const, label: '审批进度' },
-  { key: 'visitors' as const, label: '来访客户' },
+  { key: 'history' as const, label: '审批历史' },
 ];
 
 const showCancel = ref(false);
 const showReschedule = ref(false);
 const cancelReason = ref('');
-const timeSlots = [
-  { key: 'morning', name: '上午', range: '09:00 - 12:00', sh: '09', eh: '12' },
-  { key: 'afternoon', name: '下午', range: '14:00 - 17:00', sh: '14', eh: '17' },
-  { key: 'fullday', name: '全天', range: '09:00 - 17:00', sh: '09', eh: '17' },
-] as const;
-type RescheduleSlotKey = typeof timeSlots[number]['key'];
 
 const rescheduleForm = reactive({
   newDate: '2026-05-08',
-  newSH: '09',
-  newEH: '12',
-  timeSlot: 'morning' as RescheduleSlotKey,
+  newTime: '09:00',
 });
 const rescheduleChecking = ref(false);
 const rescheduleConflictChecked = ref(false);
@@ -219,21 +214,11 @@ const rescheduleConflictState = computed(() => {
 });
 const canSubmitReschedule = computed(() =>
   !!rescheduleForm.newDate &&
-  !!rescheduleForm.timeSlot &&
+  !!rescheduleForm.newTime &&
   !rescheduleChecking.value &&
   rescheduleConflictChecked.value &&
   !rescheduleConflictMsg.value,
 );
-
-function setRescheduleSlot(key: RescheduleSlotKey) {
-  const slot = timeSlots.find((s) => s.key === key);
-  if (!slot) return;
-  rescheduleForm.timeSlot = key;
-  rescheduleForm.newSH = slot.sh;
-  rescheduleForm.newEH = slot.eh;
-  rescheduleConflictChecked.value = false;
-  rescheduleConflictMsg.value = null;
-}
 
 const todayYmd = computed(() => {
   const t = new Date();
@@ -244,9 +229,9 @@ const todayYmd = computed(() => {
 });
 
 watch(
-  () => [showReschedule.value, rescheduleForm.newDate, rescheduleForm.timeSlot] as const,
-  async ([open, date, slot]) => {
-    if (!open || !date || !slot) {
+  () => [showReschedule.value, rescheduleForm.newDate, rescheduleForm.newTime] as const,
+  async ([open, date, time]) => {
+    if (!open || !date || !time) {
       rescheduleConflictChecked.value = false;
       rescheduleConflictMsg.value = null;
       return;
@@ -255,7 +240,7 @@ watch(
     rescheduleConflictChecked.value = false;
     rescheduleConflictMsg.value = null;
     try {
-      rescheduleConflictMsg.value = await checkTimeConflict(date, rescheduleForm.newSH, rescheduleForm.newEH);
+      rescheduleConflictMsg.value = await checkTimeConflict(date, time, time);
     } finally {
       rescheduleConflictChecked.value = true;
       rescheduleChecking.value = false;
@@ -274,14 +259,17 @@ const infoRows = computed(() => {
   return [
     { key: '申请编号', value: a.id, icon: 'clipboard', full: false },
     { key: '来访单位', value: a.unit, icon: 'building', full: false },
-    { key: '使用时段', value: `${a.startTime}\n— ${a.endTime.split(' ')[1]}`, icon: 'clock', full: false },
-    { key: '预计人数', value: `${a.headCount} 人`, icon: 'users', full: false },
-    { key: '最高领导', value: a.leader, icon: 'user', full: false },
-    { key: '申请部门', value: a.dept, icon: 'briefcase', full: false },
-    { key: '申请人', value: a.applicant, icon: 'user', full: false },
-    { key: '联系电话', value: a.phone, icon: 'phone', full: false },
+    { key: '会议性质', value: a.meetingNature === 'internal' ? '内部' : '外部', icon: 'clipboard', full: false },
+    { key: '会议正式开始时间', value: a.startTime, icon: 'clock', full: false },
+    { key: '客户人数', value: `${a.customerCount ?? a.headCount} 人`, icon: 'users', full: false },
+    { key: '自有人员人数', value: `${a.internalCount ?? 0} 人`, icon: 'users', full: false },
+    { key: '我公司陪同领导', value: a.leader, icon: 'user', full: false },
   ];
 });
+
+function appStartLabel(item: Application) {
+  return item.startTime || '—';
+}
 
 const canAct = computed(() => app.value?.status === 'pending' || app.value?.status === 'approved');
 const statusText = computed(() => {
@@ -303,6 +291,18 @@ function notify(msg: string, type: Toast['type'] = 'success') {
   setTimeout(() => (toast.value = null), 2400);
 }
 
+function historyLabel(eventType: string): string {
+  const map: Record<string, string> = {
+    submit: '提交申请',
+    resubmit: '重新提交',
+    approve: '审批通过',
+    reject: '审批驳回',
+    reschedule: '申请改期',
+    cancel: '取消申请',
+  };
+  return map[eventType] || eventType;
+}
+
 async function onCancel() {
   if (!app.value) return;
   await cancelApplication(app.value.id, cancelReason.value);
@@ -313,16 +313,22 @@ async function onCancel() {
 
 async function onReschedule() {
   if (!app.value || !canSubmitReschedule.value) return;
-  await rescheduleApplication(app.value.id, { ...rescheduleForm });
+  const payload = {
+    newDate: rescheduleForm.newDate,
+    newSH: rescheduleForm.newTime,
+    newEH: rescheduleForm.newTime,
+  };
+  await rescheduleApplication(app.value.id, payload);
   showReschedule.value = false;
   notify(`「${app.value.title}」改期成功，将重新审批`, 'success');
   app.value = {
     ...app.value,
     status: 'rescheduled',
-    startTime: `${rescheduleForm.newDate} ${rescheduleForm.newSH}:00`,
-    endTime: `${rescheduleForm.newDate} ${rescheduleForm.newEH}:00`,
+    startTime: `${rescheduleForm.newDate} ${rescheduleForm.newTime}`,
+    endTime: `${rescheduleForm.newDate} ${rescheduleForm.newTime}`,
   };
 }
+
 </script>
 
 <style scoped>
@@ -331,8 +337,8 @@ async function onReschedule() {
   position: relative;
 }
 .eh-detail__shell {
-  background: #f7f7f7;
-  border: 1px solid #cfcfcf;
+  background: var(--t-surface);
+  border: 1px solid var(--t-border-dark);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -342,15 +348,15 @@ async function onReschedule() {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 18px;
-  border-bottom: 1px solid #d7d7d7;
-  background: #f2f2f2;
+  border-bottom: 1px solid var(--t-border-dark);
+  background: var(--t-bg);
 }
 .eh-detail__close {
   width: 28px;
   height: 28px;
-  border: 1px solid #d3d3d3;
+  border: 1px solid var(--t-border-dark);
   border-radius: 6px;
-  background: #f2f2f2;
+  background: var(--t-bg);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -387,7 +393,7 @@ async function onReschedule() {
   justify-content: space-between;
   gap: 10px;
   padding: 0 18px;
-  border-bottom: 1px solid #d8d8d8;
+  border-bottom: 1px solid var(--t-border-dark);
 }
 .eh-detail__tabs {
   display: flex;
@@ -397,7 +403,7 @@ async function onReschedule() {
 }
 .eh-detail__tab {
   border: 1px solid transparent;
-  background: #efefef;
+  background: var(--t-surface-warm);
   color: var(--t-text2);
   padding: 6px 14px;
   border-radius: 6px;
@@ -408,8 +414,9 @@ async function onReschedule() {
   transition: all 0.15s;
 }
 .eh-detail__tab--active {
-  background: var(--t-text1);
-  color: #fff;
+  background: var(--t-accent);
+  color: #faf9f5;
+  border-color: var(--t-accent);
 }
 .eh-detail__status-chip {
   display: inline-flex;
@@ -448,7 +455,7 @@ async function onReschedule() {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: #f0efed;
+  background: var(--t-surface-warm);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -478,7 +485,7 @@ async function onReschedule() {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: #f0efed;
+  background: var(--t-surface-warm);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -495,57 +502,6 @@ async function onReschedule() {
   border: 1px solid var(--t-border);
   border-radius: 8px;
   padding: 16px;
-}
-.eh-detail__visitors {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.eh-detail__visitor {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: var(--t-bg);
-  border-radius: 6px;
-}
-.eh-detail__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--t-text1);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-.eh-detail__visitor-body {
-  flex: 1;
-}
-.eh-detail__visitor-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--t-text1);
-}
-.eh-detail__visitor-title {
-  font-size: 12px;
-  color: var(--t-text2);
-  margin-left: 6px;
-}
-.eh-detail__strategic {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--t-warning-light);
-  color: var(--t-warning);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
-  border: 1px solid #92400e33;
 }
 
 .eh-detail__action-bar {
@@ -583,7 +539,7 @@ async function onReschedule() {
   max-height: 90vh;
   overflow: auto;
   border: 1px solid var(--t-border);
-  box-shadow: 0 24px 60px rgba(17, 17, 17, 0.22);
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 24px;
 }
 .eh-modal__head {
   padding: 16px 20px;
@@ -733,5 +689,133 @@ async function onReschedule() {
 .eh-toast-leave-to {
   transform: translateY(-10px);
   opacity: 0;
+}
+
+/* 审批历史 */
+.eh-detail__history {
+  padding: 14px 18px;
+}
+.eh-detail__history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 36px 0;
+  color: var(--t-text3);
+  font-size: 13px;
+}
+.eh-detail__timeline {
+  display: flex;
+  flex-direction: column;
+}
+.eh-detail__tl-item {
+  display: flex;
+  gap: 12px;
+  min-height: 60px;
+}
+.eh-detail__tl-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 14px;
+  padding-top: 3px;
+}
+.eh-detail__tl-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--t-text3);
+  flex-shrink: 0;
+  border: 2px solid var(--t-surface);
+  box-shadow: 0 0 0 2px var(--t-text3);
+}
+.eh-detail__tl-dot[data-type='submit'],
+.eh-detail__tl-dot[data-type='resubmit'] {
+  background: var(--t-accent);
+  box-shadow: 0 0 0 2px var(--t-accent);
+}
+.eh-detail__tl-dot[data-type='approve'] {
+  background: var(--t-success);
+  box-shadow: 0 0 0 2px var(--t-success);
+}
+.eh-detail__tl-dot[data-type='reject'] {
+  background: var(--t-danger);
+  box-shadow: 0 0 0 2px var(--t-danger);
+}
+.eh-detail__tl-dot[data-type='reschedule'] {
+  background: var(--t-warning);
+  box-shadow: 0 0 0 2px var(--t-warning);
+}
+.eh-detail__tl-dot[data-type='cancel'] {
+  background: var(--t-text3);
+  box-shadow: 0 0 0 2px var(--t-text3);
+}
+.eh-detail__tl-line {
+  flex: 1;
+  width: 1px;
+  background: var(--t-border-dark);
+  margin: 4px 0;
+}
+.eh-detail__tl-body {
+  flex: 1;
+  padding-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.eh-detail__tl-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.eh-detail__tl-tag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--t-surface-warm);
+  color: var(--t-text2);
+  border: 1px solid var(--t-border);
+}
+.eh-detail__tl-tag[data-type='submit'],
+.eh-detail__tl-tag[data-type='resubmit'] {
+  background: var(--t-accent-light);
+  color: var(--t-accent);
+  border-color: var(--t-accent-border);
+}
+.eh-detail__tl-tag[data-type='approve'] {
+  background: var(--t-success-light);
+  color: var(--t-success);
+  border-color: #2c641533;
+}
+.eh-detail__tl-tag[data-type='reject'] {
+  background: var(--t-danger-light);
+  color: var(--t-danger);
+  border-color: #c41c1c33;
+}
+.eh-detail__tl-tag[data-type='reschedule'] {
+  background: var(--t-warning-light);
+  color: var(--t-warning);
+  border-color: #92400e33;
+}
+.eh-detail__tl-desc {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t-text1);
+}
+.eh-detail__tl-meta {
+  font-size: 11px;
+  color: var(--t-text3);
+}
+.eh-detail__tl-remark {
+  font-size: 12px;
+  color: var(--t-text2);
+  background: var(--t-bg);
+  border-radius: 4px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--t-border-dark);
+  line-height: 1.5;
 }
 </style>

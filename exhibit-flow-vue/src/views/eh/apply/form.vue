@@ -1,7 +1,7 @@
 <template>
 	<el-dialog
 		v-model="visible"
-		:title="form.id ? '编辑申请' : '新建参观申请'"
+			:title="form.id ? '编辑记录' : '新增记录'"
 		width="680"
 		:close-on-click-modal="false"
 		class="eh-scope eh-form-dlg"
@@ -9,122 +9,105 @@
 		<div style="display:flex;flex-direction:column;gap:14px">
 			<StepBar :steps="STEPS" :cur="step" />
 
-			<!-- 1 基本信息 -->
-			<div v-if="step === 1" style="display:flex;flex-direction:column;gap:14px">
-				<FancyInput label="会议主题" v-model="form.title" placeholder="本次参观的主题" required />
-				<div class="eh-form-dlg__row2">
-					<FancyInput label="来访单位" v-model="form.unit" placeholder="单位全称" required />
+			<!-- Step 1：基本信息 -->
+			<div v-if="step === 1" class="eh-new__grid eh-new__grid--col">
+					<FancySelect label="会议主题" v-model="form.title" :options="MEETING_TOPICS" required />
+
+					<div class="eh-new__grid eh-new__grid--2col">
+						<FancySelect label="会议性质" v-model="form.meetingNature" :options="MEETING_NATURE_OPTIONS" required />
+						<FancyInput label="来访单位" v-model="form.unit" placeholder="单位全称" required />
+					</div>
+
 					<FancySelect label="所属行业" v-model="form.industry" :options="INDUSTRIES" />
-				</div>
-				<div class="eh-form-dlg__row2">
-					<FancyInput label="参观日期" required>
-						<input type="date" v-model="form.startDate" class="eh-input__field" />
-					</FancyInput>
-					<FancyInput label="使用时段" required>
-						<div style="display:flex;align-items:center;gap:6px">
-							<select v-model="form.startHour" class="eh-input__field" style="flex:1;text-align:center;appearance:none">
-								<option v-for="h in startHours" :key="h" :value="h">{{ h }}:00</option>
-							</select>
-							<span style="color:var(--t-text3);font-size:11px">—</span>
-							<select v-model="form.endHour" class="eh-input__field" style="flex:1;text-align:center;appearance:none">
-								<option v-for="h in endHours" :key="h" :value="h">{{ h }}:00</option>
-							</select>
-						</div>
-					</FancyInput>
-				</div>
-				<div class="eh-form-dlg__conflict" :data-state="conflictState">
-					<Ic :n="conflictIcon" :size="14" :color="conflictColor" />
-					<span style="flex:1;font-size:12px" :style="{ color: conflictColor }">{{ conflictText }}</span>
-					<Btn variant="ghost" size="sm" :disabled="checking || !form.startDate" @click="doCheckConflict">
-						{{ checking ? '检测中…' : '冲突检测' }}
-					</Btn>
-				</div>
-				<div class="eh-form-dlg__row2">
-					<FancySelect label="最高陪同领导" v-model="form.leader" :options="LEADERS" />
-					<FancyInput label="预计人数" v-model="form.headCount" placeholder="总人数" type="number" />
-				</div>
-				<div class="eh-form-dlg__row2">
-					<FancySelect label="所属区县" v-model="form.district" :options="DISTRICTS" required />
-					<FancySelect label="申请部门" v-model="form.dept" :options="DEPTS" required />
-				</div>
-				<div class="eh-form-dlg__row2">
-					<FancyInput label="申请人姓名" v-model="form.applicant" required />
-					<FancyInput label="联系电话" v-model="form.phone" required />
-				</div>
-				<FancyInput label="简要议程" type="textarea" v-model="form.agenda" placeholder="本次参观主要议程和目的" />
-			</div>
 
-			<!-- 2 客户 -->
-			<div v-else-if="step === 2" style="display:flex;flex-direction:column;gap:12px">
-				<div style="display:flex;align-items:center;justify-content:space-between">
-					<span style="font-size:13px;color:var(--t-text2)">每位来访客户单独填写一行</span>
-					<Btn variant="outline" size="sm" icon="plus" @click="addVisitor">添加客户</Btn>
-				</div>
-				<div v-for="(v, i) in form.visitors" :key="i" class="eh-form-dlg__visitor">
-					<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-						<MonoLabel :style="{ color: 'var(--t-accent)' }">客户 {{ i + 1 }}</MonoLabel>
-						<button v-if="i > 0" class="eh-form-dlg__x" @click="removeVisitor(i)"><Ic n="x" :size="13" /></button>
-					</div>
-					<div class="eh-form-dlg__row2" style="margin-bottom:10px">
-						<FancyInput label="来访单位" v-model="v.unit" placeholder="客户单位" required />
-						<FancyInput label="姓名" v-model="v.name" placeholder="客户姓名" required />
-						<FancyInput label="职务" v-model="v.title" placeholder="职务/职称" />
-						<FancyInput label="是否战略客户">
-							<div style="display:flex;gap:16px;padding-top:7px">
-								<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;color:var(--t-text1)">
-									<input type="radio" :checked="v.isStrategic === true" @change="v.isStrategic = true" />是
-								</label>
-								<label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:13px;color:var(--t-text1)">
-									<input type="radio" :checked="v.isStrategic === false" @change="v.isStrategic = false" />否
-								</label>
-							</div>
-						</FancyInput>
-					</div>
-					<FancySelect v-if="v.isStrategic" label="战客级别" v-model="v.strategicLevel" :options="['省直管战客', '市直管战客', '区县直管战客', '其他战客']" />
-				</div>
-			</div>
-
-			<!-- 3 服务 -->
-			<div v-else-if="step === 3" style="display:flex;flex-direction:column;gap:18px">
-				<FancyInput label="附加服务（可多选）">
-					<div style="display:flex;flex-wrap:wrap;gap:8px;padding-top:6px">
-						<label
-							v-for="s in SERVICES"
-							:key="s"
-							class="eh-form-dlg__svc"
-							:class="{ 'eh-form-dlg__svc--on': form.services.includes(s) }"
-							@click.prevent="toggleService(s)"
-						>
-							<span class="eh-form-dlg__svc-box" :class="{ 'eh-form-dlg__svc-box--on': form.services.includes(s) }">
-								<Ic v-if="form.services.includes(s)" n="check" :size="9" color="#fff" />
+				<FancyInput label="参观日期" required hint="点击选择日期，不可早于今天">
+					<div
+						class="eh-new__date-field"
+						role="button"
+						tabindex="0"
+						@click="openDatePicker"
+						@keydown.enter.prevent="openDatePicker"
+						@keydown.space.prevent="openDatePicker"
+					>
+						<div class="eh-new__date-inner">
+							<span :class="form.startDate ? 'eh-new__date-val' : 'eh-new__date-empty'">
+								{{ form.startDate || '选择参观日期' }}
 							</span>
-							{{ s }}
-						</label>
+							<div class="eh-new__date-meta">
+								<span class="eh-new__date-icon-row" aria-hidden="true">
+									<Ic n="calendar" :size="15" color="var(--t-text3)" />
+									<Ic n="chevronDown" :size="12" color="var(--t-text3)" />
+								</span>
+							</div>
+						</div>
+						<input
+							ref="dateInputRef"
+							type="date"
+							tabindex="-1"
+							v-model="form.startDate"
+							class="eh-new__date-input"
+							:min="minSelectableDate"
+						/>
 					</div>
 				</FancyInput>
-				<div class="eh-form-dlg__hint">
-					<Ic n="info" :size="14" color="var(--t-warning)" />
-					<span><b>审批链：</b>{{ chainText }}</span>
-				</div>
-				<FancyInput label="备注" type="textarea" v-model="form.notes" placeholder="其他特殊需求或说明" />
+
+					<FancyInput label="会议正式开始时间" v-model="form.meetingTime" type="time" required hint="选择具体开始时间点" />
+
+					<div v-if="dayScheduleHint" class="eh-new__notice">
+						<Ic n="info" :size="13" color="#b45309" />
+						<span>{{ dayScheduleHint }}</span>
+					</div>
+
+					<div class="eh-new__grid eh-new__grid--2col">
+						<FancyInput label="我公司陪同领导">
+						<div class="eh-leader-combo">
+							<input
+								v-model="form.leader"
+								class="eh-input__field"
+								placeholder="请输入"
+								autocomplete="off"
+								@focus="leaderOpen = true"
+								@blur="leaderOpen = false"
+							/>
+							<Transition name="eh-leader-drop">
+								<div v-if="leaderOpen" class="eh-leader-combo__drop">
+									<div v-for="opt in ['总经理', '分管副总']" :key="opt"
+										class="eh-leader-combo__opt"
+										@mousedown.prevent="form.leader = opt; leaderOpen = false"
+									>{{ opt }}</div>
+								</div>
+							</Transition>
+						</div>
+					</FancyInput>
+						<FancyInput label="客户人数" v-model="form.customerCount" placeholder="客户到场人数" type="number" />
+					</div>
+
+					<div class="eh-new__grid eh-new__grid--2col">
+						<FancySelect label="所属区县" v-model="form.district" :options="districts" required />
+						<FancyInput label="自有人员人数" v-model="form.internalCount" placeholder="我方到场人数" type="number" />
+					</div>
+
+				<FancyInput label="议程内容" type="textarea" v-model="form.agenda" placeholder="补充本次会议议程" />
 			</div>
 
-			<!-- 4 确认 -->
-			<div v-else-if="step === 4" style="display:flex;flex-direction:column;gap:10px">
-				<div class="eh-form-dlg__ok">
+			<!-- Step 2：确认提交 -->
+			<div v-else-if="step === 2" class="eh-new__grid eh-new__grid--col">
+				<div class="eh-new__success">
 					<Ic n="checkCircle" :size="14" color="var(--t-success)" />
 					<span>信息确认无误后点击提交，将自动发起审批流程</span>
 				</div>
-				<div style="border:1px solid var(--t-border);border-radius:6px;overflow:hidden">
+				<div class="eh-new__summary">
 					<div
 						v-for="(r, i) in summary"
 						:key="r[0]"
-						:style="{ display: 'flex', gap: '14px', padding: '9px 14px', background: i % 2 === 0 ? 'var(--t-bg)' : 'var(--t-surface)', fontSize: '12px' }"
+						class="eh-new__summary-row"
+						:class="{ 'eh-new__summary-row--alt': i % 2 === 0 }"
 					>
-						<span style="color:var(--t-text3);width:80px;flex-shrink:0;font-weight:500">{{ r[0] }}</span>
-						<span style="color:var(--t-text1);font-weight:500">{{ r[1] }}</span>
+						<span class="eh-new__summary-key">{{ r[0] }}</span>
+						<span class="eh-new__summary-val">{{ r[1] }}</span>
 					</div>
 				</div>
+				<FancyInput label="备注" type="textarea" v-model="form.remark" placeholder="其他特殊需求或补充说明" />
 			</div>
 		</div>
 
@@ -132,9 +115,11 @@
 			<div style="display:flex;justify-content:space-between;width:100%">
 				<Btn variant="ghost" icon="arrowLeft" @click="onPrev">{{ step === 1 ? '取消' : '上一步' }}</Btn>
 				<div style="display:flex;gap:8px">
-					<Btn v-if="step < 4" variant="ghost" @click="onDraft">存草稿</Btn>
-					<Btn v-if="step < 4" variant="primary" icon="chevronRight" @click="onNext">下一步</Btn>
-					<Btn v-else variant="orange" icon="send" @click="onSubmit">提交申请</Btn>
+					<Btn v-if="step < 2" variant="ghost" @click="onDraft">存草稿</Btn>
+					<Btn v-if="step < 2" variant="primary" icon="chevronRight" @click="onNext">下一步</Btn>
+					<Btn v-else variant="orange" icon="send" :disabled="saving" @click="onSubmit">
+						{{ saving ? '提交中…' : '提交申请' }}
+					</Btn>
 				</div>
 			</div>
 		</template>
@@ -142,205 +127,160 @@
 </template>
 
 <script setup lang="ts" name="ehapplyDialog">
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { ElDialog, ElMessage } from 'element-plus';
-import { FancyInput, FancySelect, Btn, MonoLabel, Ic, StepBar } from '/@/components/eh';
-import { SERVICES, INDUSTRIES, DISTRICTS, LEADERS, DEPTS } from '/@/components/eh/mock';
-import { checkConflict, getObj, saveDraft, submitApply, updateAndSubmit, updateDraft } from '/@/api/eh/apply';
+import { FancyInput, FancySelect, Btn, Ic, StepBar } from '/@/components/eh';
+import { INDUSTRIES } from '/@/components/eh/mock';
+import { getDicts } from '/@/api/admin/dict';
+import { fetchAggregateList, getObj, saveDraft, submitApply, updateAndSubmit, updateDraft } from '/@/api/eh/apply';
 
 const emit = defineEmits<{ (e: 'refresh'): void }>();
 
-const STEPS = ['基本信息', '来访客户', '服务需求', '确认提交'];
+const STEPS = ['基本信息', '确认提交'];
+const MEETING_TOPICS = ['党建和创', '方案交流', '合作伙伴', '其他'];
+const MEETING_NATURE_OPTIONS = [
+	{ label: '内部', value: 'internal' },
+	{ label: '外部', value: 'external' },
+];
+
+const districts = ref<string[]>([]);
+onMounted(async () => {
+	const res = await getDicts('dezhou_district').catch(() => null);
+	districts.value = (res?.data ?? []).map((item: any) => item.label as string);
+});
+
 const visible = ref(false);
 const step = ref(1);
-const checking = ref(false);
 const saving = ref(false);
+const leaderOpen = ref(false);
+const dateInputRef = ref<HTMLInputElement | null>(null);
+const daySchedules = ref<string[]>([]);
+
+const minSelectableDate = computed(() => {
+	const t = new Date();
+	return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+});
 
 const form = reactive({
 	id: '',
 	title: '',
+	meetingNature: 'external',
 	unit: '',
 	industry: INDUSTRIES[0],
-	district: DISTRICTS[0],
-	applicant: '李建国',
-	phone: '13812345678',
-	dept: DEPTS[0],
-	startDate: '2026-05-06',
-	startHour: '09',
-	endHour: '11',
-	leader: LEADERS[0],
-	headCount: '',
+	district: '',
+	startDate: '',
+	meetingTime: '',
+	leader: '',
+	customerCount: '',
+	internalCount: '',
 	agenda: '',
-	notes: '',
-	services: [] as string[],
-	visitors: [{ unit: '', name: '', title: '', isStrategic: false, strategicLevel: '' }],
-	conflictChecked: false,
-	conflictResult: null as string | null,
+	remark: '',
 });
 
-const startHours = Array.from({ length: 12 }, (_, i) => String(i + 8).padStart(2, '0'));
-const endHours = Array.from({ length: 12 }, (_, i) => String(i + 9).padStart(2, '0'));
+const dayScheduleHint = computed(() => {
+	if (!daySchedules.value.length) return '';
+	return `当天已有排期：${daySchedules.value.join('；')}。可继续保存。`;
+});
 
-const conflictState = computed(() => (!form.conflictChecked ? 'idle' : form.conflictResult ? 'error' : 'ok'));
-const conflictIcon = computed(() => (!form.conflictChecked ? 'search' : form.conflictResult ? 'alertTri' : 'checkCircle'));
-const conflictColor = computed(() => (!form.conflictChecked ? 'var(--t-text3)' : form.conflictResult ? 'var(--t-danger)' : 'var(--t-success)'));
-const conflictText = computed(() =>
-	!form.conflictChecked ? '建议填写日期后检测时段冲突' : form.conflictResult ? `冲突：${form.conflictResult}` : '时段可用，无冲突'
+watch(
+	() => [form.startDate, form.meetingTime] as const,
+	async ([date]) => {
+		if (!date) {
+			daySchedules.value = [];
+			return;
+		}
+		try {
+			const res: any = await fetchAggregateList();
+			daySchedules.value = (res?.data || [])
+				.filter((item: any) => String(item.startTime || '').slice(0, 10) === date && (!form.id || String(item.id) !== form.id))
+				.map((item: any) => `${String(item.startTime || '').replace('T', ' ').slice(11, 16)} ${item.title || item.subject || ''}`)
+				.filter(Boolean);
+		} catch {
+			daySchedules.value = [];
+		}
+	}
 );
 
-function doCheckConflict() {
-	if (!form.startDate || !form.startHour || !form.endHour) {
-		ElMessage.warning('请先选择参观日期和时段');
-		return;
+function openDatePicker() {
+	const el = dateInputRef.value;
+	if (!el) return;
+	if (typeof el.showPicker === 'function') {
+		try { el.showPicker(); return; } catch {}
 	}
-	checking.value = true;
-	checkConflict({
-		date: form.startDate,
-		startHour: form.startHour,
-		endHour: form.endHour,
-	})
-		.then((res: any) => {
-			form.conflictResult = res?.data ?? null;
-		})
-		.catch((e: any) => {
-			ElMessage.error(e?.msg || '冲突检测失败');
-			form.conflictResult = null;
-		})
-		.finally(() => {
-			form.conflictChecked = true;
-			checking.value = false;
-		});
+	el.focus();
+	el.click();
 }
+
+const summary = computed<[string, string][]>(() => [
+	['会议主题', form.title],
+	['会议性质', form.meetingNature === 'internal' ? '内部' : '外部'],
+	['来访单位', form.unit],
+	['所属行业', form.industry],
+	['参观日期', form.startDate],
+	['会议正式开始时间', form.meetingTime || '—'],
+	['我公司陪同领导', form.leader || '—'],
+	['客户人数', form.customerCount || '0'],
+	['自有人员人数', form.internalCount || '0'],
+	['所属区县', form.district],
+	['议程内容', form.agenda || '—'],
+]);
 
 function buildPayload() {
 	return {
 		title: form.title,
+		meetingNature: form.meetingNature,
 		unit: form.unit,
 		industry: form.industry,
 		district: form.district,
-		applicant: form.applicant,
-		phone: form.phone,
-		dept: form.dept,
 		startDate: form.startDate,
-		startHour: form.startHour,
-		endHour: form.endHour,
+		meetingTime: form.meetingTime,
+		startHour: form.meetingTime,
+		endHour: form.meetingTime,
 		leader: form.leader,
-		headCount: form.headCount ? Number(form.headCount) : 0,
+		customerCount: form.customerCount ? Number(form.customerCount) : 0,
+		internalCount: form.internalCount ? Number(form.internalCount) : 0,
+		headCount: Number(form.customerCount || 0) + Number(form.internalCount || 0),
 		agenda: form.agenda,
-		remark: form.notes,
-		services: [...form.services],
-		visitors: form.visitors.map((item) => ({
-			unit: item.unit,
-			name: item.name,
-			title: item.title,
-			isStrategic: !!item.isStrategic,
-			strategicLevel: item.strategicLevel,
-		})),
+		remark: form.remark,
+		services: [],
+		visitors: [],
 	};
 }
 
 function resetForm() {
 	Object.assign(form, {
-		id: '',
-		title: '',
-		unit: '',
-		industry: INDUSTRIES[0],
-		district: DISTRICTS[0],
-		applicant: '李建国',
-		phone: '13812345678',
-		dept: DEPTS[0],
-		startDate: '2026-05-06',
-		startHour: '09',
-		endHour: '11',
-		leader: LEADERS[0],
-		headCount: '',
-		agenda: '',
-		notes: '',
-		services: [],
-		visitors: [{ unit: '', name: '', title: '', isStrategic: false, strategicLevel: '' }],
-		conflictChecked: false,
-		conflictResult: null,
+		id: '', title: '', unit: '', industry: INDUSTRIES[0],
+		meetingNature: 'external', district: districts.value[0] ?? '',
+		startDate: '', meetingTime: '',
+		leader: '', customerCount: '', internalCount: '', agenda: '', remark: '',
 	});
 }
-
-const chainText = computed(() => {
-	if (form.leader === '总经理') return '部门领导 → 展厅主管 → 总经理（三级）';
-	if (form.leader === '分管副总') return '部门领导 → 展厅主管 → 分管副总（三级）';
-	return '部门领导 → 展厅主管（二级）';
-});
-
-function addVisitor() {
-	form.visitors.push({ unit: '', name: '', title: '', isStrategic: false, strategicLevel: '' });
-}
-function removeVisitor(i: number) {
-	form.visitors.splice(i, 1);
-}
-function toggleService(s: string) {
-	const i = form.services.indexOf(s);
-	if (i === -1) form.services.push(s);
-	else form.services.splice(i, 1);
-}
-
-const summary = computed<[string, string][]>(() => [
-	['会议主题', form.title],
-	['来访单位', form.unit],
-	['所属行业', form.industry],
-	['参观日期', form.startDate],
-	['使用时段', `${form.startHour}:00 — ${form.endHour}:00`],
-	['最高领导', form.leader],
-	['预计人数', form.headCount || '—'],
-	['申请部门', form.dept],
-	['申请人', `${form.applicant}（${form.district}）`],
-	['联系电话', form.phone],
-	['附加服务', form.services.join('、') || '无'],
-	['来访客户', form.visitors.map((v) => `${v.name}/${v.unit}`).join('，')],
-]);
 
 async function openDialog(id?: string) {
 	visible.value = true;
 	step.value = 1;
 	resetForm();
 	form.id = id || '';
-	if (!id) {
-		return;
-	}
+	if (!id) return;
 	try {
 		const res = await getObj(id);
 		const raw = res?.data;
-		if (!raw) {
-			ElMessage.error('未找到申请详情');
-			return;
-		}
-		Object.assign(form, {
-			id: String(raw.id || ''),
-			title: raw.subject || '',
-			unit: raw.visitorCompany || '',
-			industry: raw.industry || INDUSTRIES[0],
-			district: raw.district || DISTRICTS[0],
-			applicant: raw.applicant || '',
-			phone: raw.phone || '',
-			dept: raw.applicantDept || DEPTS[0],
-			startDate: raw.startTime ? String(raw.startTime).slice(0, 10) : '',
-			startHour: raw.startTime ? String(raw.startTime).slice(11, 13) : '09',
-			endHour: raw.endTime ? String(raw.endTime).slice(11, 13) : '11',
-			leader: raw.topLeaderTitle || LEADERS[0],
-			headCount: raw.visitorCount || '',
-			agenda: raw.agenda || '',
-			notes: raw.remark || '',
-			services: raw.extraServices ? String(raw.extraServices).split(',').filter(Boolean) : [],
-			visitors:
-				raw.visitors?.length > 0
-					? raw.visitors.map((item: any) => ({
-							unit: item.unit || item.visitorCompany || '',
-							name: item.name || '',
-							title: item.title || '',
-							isStrategic: item.isKeyCustomer === '1',
-							strategicLevel: item.keyCustomerLevel || '',
-					  }))
-					: [{ unit: '', name: '', title: '', isStrategic: false, strategicLevel: '' }],
-			conflictChecked: false,
-			conflictResult: null,
-		});
+		if (!raw) { ElMessage.error('未找到申请详情'); return; }
+			Object.assign(form, {
+				id: String(raw.id || ''),
+				title: raw.subject || '',
+				meetingNature: raw.meetingNature || 'external',
+				unit: raw.visitorCompany || '',
+				industry: raw.industry || INDUSTRIES[0],
+				district: raw.district || districts.value[0] || '',
+				startDate: raw.startTime ? String(raw.startTime).slice(0, 10) : '',
+				meetingTime: raw.startTime ? String(raw.startTime).replace('T', ' ').slice(11, 16) : '',
+				leader: raw.topLeaderTitle || '',
+				customerCount: raw.customerCount ?? raw.visitorCount ?? '',
+				internalCount: raw.internalCount ?? '',
+				agenda: raw.agenda || '',
+				remark: raw.remark || '',
+			});
 	} catch (e: any) {
 		ElMessage.error(e?.msg || '加载申请详情失败');
 	}
@@ -351,12 +291,8 @@ function onPrev() {
 	else step.value -= 1;
 }
 function onNext() {
-	if (step.value === 1 && (!form.title || !form.unit)) {
-		ElMessage.error('请填写必填项');
-		return;
-	}
-	if (step.value === 2 && !form.visitors.every((v) => v.name && v.unit)) {
-		ElMessage.error('请完善客户信息');
+	if (!form.title || !form.meetingNature || !form.unit || !form.startDate || !form.meetingTime || !form.district) {
+		ElMessage.error('请填写所有必填项');
 		return;
 	}
 	step.value += 1;
@@ -368,12 +304,8 @@ async function onDraft() {
 	}
 	saving.value = true;
 	try {
-		const payload = buildPayload();
-		if (form.id) {
-			await updateDraft(form.id, payload);
-		} else {
-			await saveDraft(payload);
-		}
+		if (form.id) await updateDraft(form.id, buildPayload());
+		else await saveDraft(buildPayload());
 		ElMessage.success('草稿已保存');
 		visible.value = false;
 		emit('refresh');
@@ -384,22 +316,14 @@ async function onDraft() {
 	}
 }
 async function onSubmit() {
-	if (!form.title || !form.unit || !form.startDate || !form.applicant || !form.phone) {
+	if (!form.title || !form.unit || !form.startDate || !form.meetingTime) {
 		ElMessage.error('请完善必填信息后再提交');
-		return;
-	}
-	if (!form.visitors.every((v) => v.name && v.unit)) {
-		ElMessage.error('请完善来访客户信息');
 		return;
 	}
 	saving.value = true;
 	try {
-		const payload = buildPayload();
-		if (form.id) {
-			await updateAndSubmit(form.id, payload);
-		} else {
-			await submitApply(payload);
-		}
+		if (form.id) await updateAndSubmit(form.id, buildPayload());
+		else await submitApply(buildPayload());
 		ElMessage.success(`申请「${form.title}」已提交，等待审批`);
 		visible.value = false;
 		emit('refresh');
@@ -414,87 +338,183 @@ defineExpose({ openDialog });
 </script>
 
 <style scoped>
-.eh-form-dlg__row2 {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 14px;
-}
-.eh-form-dlg__conflict {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 10px 12px;
+.eh-new__grid { display: grid; gap: 14px; }
+.eh-new__grid--col { grid-template-columns: 1fr; }
+.eh-new__grid--2col { grid-template-columns: 1fr 1fr; }
+
+.eh-new__date-field {
+	position: relative;
+	border: 1px solid var(--t-border);
 	border-radius: 4px;
-	background: var(--t-bg);
-	border: 1px solid var(--t-border);
-}
-.eh-form-dlg__conflict[data-state='error'] {
-	background: var(--t-danger-light);
-	border-color: #c41c1c44;
-}
-.eh-form-dlg__conflict[data-state='ok'] {
-	background: var(--t-success-light);
-	border-color: #2c641544;
-}
-.eh-form-dlg__visitor {
-	background: var(--t-bg);
-	border-radius: 6px;
-	padding: 14px;
-	border: 1px solid var(--t-border);
-}
-.eh-form-dlg__x {
-	border: none;
-	background: none;
-	cursor: pointer;
-	color: var(--t-text3);
-	display: flex;
-	padding: 4px;
-}
-.eh-form-dlg__svc {
-	display: flex;
-	align-items: center;
-	gap: 7px;
-	padding: 7px 14px;
-	border-radius: 4px;
-	cursor: pointer;
-	border: 1px solid var(--t-border);
 	background: var(--t-surface);
-	color: var(--t-text2);
-	font-size: 13px;
-	transition: all 0.12s;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease;
+	outline: none;
 }
-.eh-form-dlg__svc--on {
-	border-color: var(--t-text1);
-	background: var(--t-text1);
-	color: #fff;
-	font-weight: 600;
+.eh-new__date-field:hover { border-color: var(--t-border-dark); }
+.eh-new__date-field:focus-within { border-color: var(--t-accent); }
+.eh-new__date-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	min-height: 35px;
+	padding: 8px 10px;
+	pointer-events: none;
+	user-select: none;
+	line-height: 1.2;
 }
-.eh-form-dlg__svc-box {
-	width: 14px;
-	height: 14px;
-	border-radius: 3px;
-	border: 1.5px solid var(--t-border);
+.eh-new__date-val { font-size: 13px; color: var(--t-text1); }
+.eh-new__date-empty { font-size: 13px; color: var(--t-text3); }
+.eh-new__date-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.eh-new__date-icon-row { display: flex; align-items: center; gap: 2px; flex-shrink: 0; opacity: 0.92; }
+.eh-new__date-input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	opacity: 0;
+	cursor: pointer;
+	font-size: 16px;
+	color: transparent;
+	background: transparent;
+	box-sizing: border-box;
+	-webkit-appearance: none;
+	appearance: none;
+	z-index: 1;
+}
+.eh-new__date-input::-webkit-calendar-picker-indicator {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+
+.eh-new__notice {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	border: 1px solid #f5d08a;
+	background: #fff8eb;
+	color: #92400e;
+	border-radius: 6px;
+	padding: 9px 10px;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.eh-new__slots { display: flex; gap: 8px; }
+.eh-new__slot {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 3px;
+	padding: 10px 6px;
+	border: 1px solid var(--t-border);
+	border-radius: 4px;
+	background: var(--t-surface);
+	cursor: pointer;
+	font-family: inherit;
+	transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.eh-new__slot-name { font-size: 13px; font-weight: 600; color: var(--t-text1); }
+.eh-new__slot-range { font-size: 10px; color: var(--t-text3); white-space: nowrap; }
+.eh-new__slot--on { border-color: var(--t-accent); background: var(--t-accent); }
+.eh-new__slot--on .eh-new__slot-name,
+.eh-new__slot--on .eh-new__slot-range { color: #fff; }
+@keyframes border-pulse {
+	0%, 100% { border-color: var(--t-accent); opacity: 1; }
+	50% { border-color: var(--t-accent); opacity: 0.5; }
+}
+.eh-new__slot--checking { border-color: var(--t-accent); background: var(--t-accent); animation: border-pulse 1s ease-in-out infinite; }
+.eh-new__slot--checking .eh-new__slot-name,
+.eh-new__slot--checking .eh-new__slot-range { color: #fff; }
+.eh-new__slot--ok { border-color: var(--t-success); background: var(--t-success); }
+.eh-new__slot--ok .eh-new__slot-name,
+.eh-new__slot--ok .eh-new__slot-range { color: #fff; }
+.eh-new__slot--err { border-color: var(--t-danger); background: var(--t-danger); cursor: pointer; }
+.eh-new__slot--err .eh-new__slot-name,
+.eh-new__slot--err .eh-new__slot-range { color: #fff; }
+
+.eh-new__modal-mask {
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,0.45);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	flex-shrink: 0;
+	z-index: 9999;
+	padding: 24px;
 }
-.eh-form-dlg__svc-box--on {
-	background: var(--t-accent);
-	border-color: #fff;
-}
-.eh-form-dlg__hint {
-	background: var(--t-warning-light);
-	border: 1px solid #92400e33;
-	border-radius: 4px;
-	padding: 10px 14px;
-	font-size: 12px;
-	color: var(--t-warning);
+.eh-new__modal {
+	background: var(--t-surface);
+	border-radius: 12px;
+	padding: 28px 22px 22px;
+	width: 100%;
+	max-width: 320px;
 	display: flex;
-	gap: 8px;
-	align-items: flex-start;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	box-shadow: rgba(0,0,0,0.05) 0px 4px 24px;
 }
-.eh-form-dlg__ok {
+.eh-new__modal-icon {
+	width: 52px;
+	height: 52px;
+	border-radius: 50%;
+	background: var(--t-danger-light, #fef2f2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 2px;
+}
+.eh-new__modal-title { font-size: 16px; font-weight: 700; color: var(--t-text1); }
+.eh-new__modal-desc { font-size: 12px; color: var(--t-text2); text-align: center; line-height: 1.6; }
+.eh-new__modal-detail {
+	width: 100%;
+	background: var(--t-bg);
+	border-radius: 6px;
+	overflow: hidden;
+	margin-top: 4px;
+}
+.eh-new__modal-detail-row {
+	display: flex;
+	gap: 10px;
+	padding: 8px 12px;
+	font-size: 12px;
+	border-bottom: 1px solid var(--t-border);
+}
+.eh-new__modal-detail-row:last-child { border-bottom: none; }
+.eh-new__modal-detail-key { color: var(--t-text3); flex-shrink: 0; width: 52px; }
+.eh-new__modal-detail-val { color: var(--t-text1); font-weight: 500; word-break: break-all; }
+.eh-new__modal-btn {
+	margin-top: 6px;
+	width: 100%;
+	padding: 11px;
+	border: none;
+	border-radius: 6px;
+	background: var(--t-accent);
+	color: #fffaf2;
+	font-size: 14px;
+	font-weight: 600;
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.eh-modal-enter-active, .eh-modal-leave-active { transition: opacity 0.2s; }
+.eh-modal-enter-active .eh-new__modal, .eh-modal-leave-active .eh-new__modal { transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s; }
+.eh-modal-enter-from, .eh-modal-leave-to { opacity: 0; }
+.eh-modal-enter-from .eh-new__modal, .eh-modal-leave-to .eh-new__modal { transform: scale(0.88); opacity: 0; }
+
+.eh-new__success {
 	background: var(--t-success-light);
 	border: 1px solid #2c641544;
 	border-radius: 4px;
@@ -504,5 +524,46 @@ defineExpose({ openDialog });
 	display: flex;
 	gap: 8px;
 	align-items: center;
+}
+.eh-new__summary { border: 1px solid var(--t-border); border-radius: 6px; overflow: hidden; }
+.eh-new__summary-row { display: flex; gap: 14px; padding: 9px 14px; background: var(--t-surface); font-size: 12px; }
+.eh-new__summary-row--alt { background: var(--t-bg); }
+.eh-new__summary-key { color: var(--t-text3); width: 66px; flex-shrink: 0; font-weight: 500; }
+.eh-new__summary-val { color: var(--t-text1); font-weight: 500; word-break: break-all; }
+.eh-leader-combo {
+	position: relative;
+}
+.eh-leader-combo__drop {
+	position: absolute;
+	top: calc(100% + 2px);
+	left: 0;
+	right: 0;
+	background: var(--t-surface);
+	border: 1px solid var(--t-border);
+	border-radius: 4px;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+	z-index: 100;
+	overflow: hidden;
+
+}
+.eh-leader-drop-enter-active {
+	transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.eh-leader-drop-leave-active {
+	transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.eh-leader-drop-enter-from,
+.eh-leader-drop-leave-to {
+	opacity: 0;
+	transform: translateY(-6px);
+}
+.eh-leader-combo__opt {
+	padding: 8px 12px;
+	font-size: 13px;
+	color: var(--t-text1);
+	cursor: pointer;
+}
+.eh-leader-combo__opt:hover {
+	background: var(--t-bg);
 }
 </style>

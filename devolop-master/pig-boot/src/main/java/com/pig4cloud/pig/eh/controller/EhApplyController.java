@@ -25,6 +25,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.pig.eh.dto.ApprovalActionDTO;
 import com.pig4cloud.pig.eh.dto.ApplyFormDTO;
 import com.pig4cloud.pig.eh.dto.ApplyRescheduleDTO;
@@ -69,10 +70,36 @@ public class EhApplyController {
 		return R.ok(ehApplyService.page(page, Wrappers.query(query)));
 	}
 
+	@GetMapping("/my/page")
+	@Operation(summary = "当前用户申请分页查询")
+	public R getMyPage(@ParameterObject Page page) {
+		String username = SecurityUtils.getUser().getUsername();
+		return R.ok(ehApplyService.page(page,
+			Wrappers.<EhApply>lambdaQuery()
+				.eq(EhApply::getDelFlag, "0")
+				.and(wrapper -> wrapper.eq(EhApply::getCreateBy, username).or().eq(EhApply::getApplicant, username))
+				.orderByDesc(EhApply::getUpdateTime)
+				.orderByDesc(EhApply::getCreateTime)));
+	}
+
 	@GetMapping("/details/{id}")
 	@HasPermission("eh_apply_view")
 	@Operation(summary = "查看聚合详情")
 	public R getById(@PathVariable("id") Long id) {
+		return R.ok(ehApplyService.getApplyDetail(id));
+	}
+
+	@GetMapping("/my/details/{id}")
+	@Operation(summary = "当前用户申请聚合详情")
+	public R getMyById(@PathVariable("id") Long id) {
+		String username = SecurityUtils.getUser().getUsername();
+		EhApply apply = ehApplyService.getById(id);
+		if (apply == null) {
+			return R.ok(null);
+		}
+		if (!username.equals(apply.getCreateBy()) && !username.equals(apply.getApplicant())) {
+			return R.failed("无权查看该申请");
+		}
 		return R.ok(ehApplyService.getApplyDetail(id));
 	}
 
@@ -124,6 +151,14 @@ public class EhApplyController {
 		return R.ok(ehApplyService.updateAndSubmit(id, dto));
 	}
 
+	@PutMapping("/{id}/agenda")
+	@SysLog("补充展厅记录议程")
+	@HasPermission("eh_apply_edit")
+	@Operation(summary = "补充议程")
+	public R updateAgenda(@PathVariable Long id, @RequestBody AgendaRequest request) {
+		return R.ok(ehApplyService.updateAgenda(id, request == null ? null : request.getAgenda()));
+	}
+
 	@PutMapping("/{id}/cancel")
 	@SysLog("取消展厅申请")
 	@HasPermission("eh_apply_edit")
@@ -160,7 +195,7 @@ public class EhApplyController {
 		return R.ok(ehApplyService.listCalendarEvents(start, end));
 	}
 
-	@ResponseExcel
+	@ResponseExcel(name = "排期日历")
 	@GetMapping("/calendar/export")
 	@HasPermission("eh_apply_export")
 	@Operation(summary = "导出排期日历")
@@ -197,6 +232,11 @@ public class EhApplyController {
 	@Data
 	static class CancelRequest {
 		private String reason;
+	}
+
+	@Data
+	static class AgendaRequest {
+		private String agenda;
 	}
 
 }

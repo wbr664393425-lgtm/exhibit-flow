@@ -23,4 +23,5 @@ public class AdminVisitAggregateVO {
 	private String returnSigner;
 	private LocalDateTime returnTime;
 	private String visitStatus;
+	private Integer photoCount;
 }

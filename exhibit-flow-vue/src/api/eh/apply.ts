@@ -117,3 +117,11 @@ export const rescheduleApply = (id: string, data: Object) => {
 		data,
 	});
 };
+
+export const updateAgenda = (id: string, data: { agenda: string }) => {
+	return request({
+		url: `/admin/eh/apply/${id}/agenda`,
+		method: 'put',
+		data,
+	});
+};

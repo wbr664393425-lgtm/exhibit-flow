@@ -28,7 +28,7 @@
 				<div v-show="state.isShowLoockLogin" class="layout-lock-screen-login">
 					<div class="layout-lock-screen-login-box">
 						<div class="layout-lock-screen-login-box-img">
-							<img :src="formData.avatar" />
+							<img :src="formData.avatar || defaultAvatar" @error="(e:any) => (e.target.src = defaultAvatar)" />
 						</div>
 						<div class="layout-lock-screen-login-box-name">{{ formData.username }}</div>
 						<div class="layout-lock-screen-login-box-value">
@@ -69,6 +69,7 @@ import { storeToRefs } from 'pinia';
 import { useThemeConfig } from '/@/stores/themeConfig';
 import { checkPassword } from '/@/api/admin/user';
 import { useUserInfo } from '/@/stores/userInfo';
+import defaultAvatar from '/@/assets/default-avatar.svg';
 // 定义变量内容
 const layoutLockScreenDateRef = ref<HtmlType>();
 const layoutLockScreenInputRef = ref();

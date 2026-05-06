@@ -13,9 +13,9 @@ defineProps<{ style?: CSSProperties }>();
 .eh-mono-label {
   font-family: var(--t-font-mono);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.9px;
-  color: var(--t-text3);
+  color: var(--t-text2);
 }
 </style>

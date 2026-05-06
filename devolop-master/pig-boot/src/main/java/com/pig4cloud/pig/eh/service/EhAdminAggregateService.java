@@ -9,6 +9,8 @@ import com.pig4cloud.pig.eh.vo.AdminChangeLogVO;
 import com.pig4cloud.pig.eh.vo.AdminOpportunityVO;
 import com.pig4cloud.pig.eh.vo.AdminVisitAggregateVO;
 import com.pig4cloud.pig.eh.vo.AdminVisitPhotoVO;
+import com.pig4cloud.pig.eh.vo.EhVisitRecordExportVO;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.List;
 
@@ -19,6 +21,8 @@ public interface EhAdminAggregateService {
 	List<AdminApplyPageVO> queryApprovalTodoList();
 
 	List<AdminVisitAggregateVO> queryVisitAggregateList();
+
+	List<EhVisitRecordExportVO> exportVisitRecordList();
 
 	List<AdminVisitPhotoVO> queryVisitPhotoAggregateList();
 
@@ -33,4 +37,8 @@ public interface EhAdminAggregateService {
 	boolean approveOrRejectOrTransfer(ApprovalActionDTO dto);
 
 	boolean saveVisitPhotos(VisitPhotoBatchDTO dto);
+
+	void exportVisitPhotoDataTable(HttpServletResponse response);
+
+	void exportVisitPhotosZip(Long applyId, HttpServletResponse response);
 }

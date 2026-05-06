@@ -32,6 +32,7 @@ import com.pig4cloud.pig.eh.service.EhVisitPhotoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
@@ -98,6 +99,20 @@ public class EhVisitPhotoController {
 	@Operation(summary = "管理端照片聚合列表")
 	public R getAggregateList() {
 		return R.ok(ehAdminAggregateService.queryVisitPhotoAggregateList());
+	}
+
+	@GetMapping("/export-data-table")
+	@HasPermission("eh_visit_photo_view")
+	@Operation(summary = "按展厅参观数据表模板导出")
+	public void exportDataTable(HttpServletResponse response) {
+		ehAdminAggregateService.exportVisitPhotoDataTable(response);
+	}
+
+	@GetMapping("/export-zip")
+	@HasPermission("eh_visit_photo_view")
+	@Operation(summary = "导出现场照片压缩包")
+	public void exportZip(@RequestParam(value = "applyId", required = false) Long applyId, HttpServletResponse response) {
+		ehAdminAggregateService.exportVisitPhotosZip(applyId, response);
 	}
 
 }

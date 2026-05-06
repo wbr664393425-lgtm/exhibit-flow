@@ -2,10 +2,10 @@
 	<div class="eh-scope eh-aggr">
 		<div class="eh-aggr__head">
 			<div>
-				<h2 class="eh-aggr__title">全部申请</h2>
-				<p class="eh-aggr__sub">共 {{ apps.length }} 条申请记录</p>
-			</div>
-			<Btn variant="primary" icon="plus" v-auth="'eh_apply_add'" @click="onNew">新建申请</Btn>
+					<h2 class="eh-aggr__title">全部记录</h2>
+					<p class="eh-aggr__sub">共 {{ apps.length }} 条记录</p>
+				</div>
+				<Btn variant="primary" icon="plus" v-auth="'eh_apply_add'" @click="onNew">新增记录</Btn>
 		</div>
 
 		<div class="eh-aggr__filters">
@@ -29,18 +29,18 @@
 					:key="a.id"
 					clickable
 					@click="sel = a"
-					:style="{ padding: '14px 16px', borderColor: sel?.id === a.id ? 'var(--t-text1)' : 'var(--t-border)' }"
+					:style="{ padding: '14px 16px', borderColor: sel?.id === a.id ? 'var(--t-accent)' : 'var(--t-border)' }"
 				>
 					<div style="display:flex;align-items:flex-start;gap:12px">
 						<div class="eh-aggr__avatar"><Ic n="building" :size="16" color="var(--t-text2)" /></div>
 						<div style="flex:1;min-width:0">
 							<div class="eh-aggr__item-head">
-								<span class="eh-aggr__item-title">{{ a.title }}</span>
+								<span class="eh-aggr__item-title">{{ recordTitle(a) }}</span>
 								<Badge :status="a.status" />
 							</div>
 							<div class="eh-aggr__item-metas">
-								<span><Ic n="building" :size="11" color="var(--t-text3)" />{{ a.unit }}</span>
-								<span><Ic n="calendar" :size="11" color="var(--t-text3)" />{{ a.startTime }} — {{ a.endTime.split(' ')[1] }}</span>
+								<span class="eh-aggr__item-topic">{{ a.title }}</span>
+								<span><Ic n="calendar" :size="11" color="var(--t-text3)" />{{ recordStartLabel(a) }}</span>
 								<span><Ic n="users" :size="11" color="var(--t-text3)" />{{ a.headCount }}人</span>
 								<span><Ic n="clipboard" :size="11" color="var(--t-text3)" />{{ a.id }}</span>
 							</div>
@@ -55,7 +55,7 @@
 				</Card>
 				<div v-if="shown.length === 0" class="eh-aggr__empty">
 					<Ic n="clipboard" :size="44" color="var(--t-text3)" />
-					<p>暂无相关申请</p>
+						<p>暂无相关记录</p>
 				</div>
 			</div>
 
@@ -64,14 +64,14 @@
 				<template v-if="!sel">
 					<div class="eh-aggr__empty">
 						<Ic n="clipboard" :size="50" color="var(--t-text3)" />
-						<p>从左侧选择申请查看详情</p>
+							<p>从左侧选择记录查看详情</p>
 					</div>
 				</template>
 				<Card v-else :style="{ padding: '22px 24px' }">
 					<div class="eh-aggr__detail-head">
 						<div>
-							<h3 class="eh-aggr__detail-title">{{ sel.title }}</h3>
-							<MonoLabel>{{ sel.id }}</MonoLabel>
+							<h3 class="eh-aggr__detail-title">{{ recordTitle(sel) }}</h3>
+							<MonoLabel>{{ sel.title }} · {{ sel.id }}</MonoLabel>
 						</div>
 						<Badge :status="sel.status" />
 					</div>
@@ -86,43 +86,44 @@
 						</div>
 					</div>
 
-					<div v-if="sel.agenda" class="eh-aggr__section">
-						<MonoLabel :style="{ display: 'block', marginBottom: '4px' }">简要议程</MonoLabel>
-						<p style="margin:0;font-size:13px;color:var(--t-text2);line-height:1.7">{{ sel.agenda }}</p>
-					</div>
-
-					<div class="eh-aggr__section">
-						<MonoLabel :style="{ display: 'block', marginBottom: '8px' }">来访客户</MonoLabel>
-						<div style="display:flex;flex-direction:column;gap:6px">
-							<div v-for="(v, i) in sel.visitors" :key="i" class="eh-aggr__visitor">
-								<div class="eh-aggr__avatar-round">{{ v.name[0] }}</div>
-								<div style="flex:1">
-									<span style="font-size:13px;font-weight:600;color:var(--t-text1)">{{ v.name }}</span>
-									<span style="font-size:12px;color:var(--t-text3);margin-left:6px">{{ v.title }}</span>
-								</div>
-								<span v-if="v.isStrategic" class="eh-aggr__strategic">
-									<Ic n="star" :size="9" color="var(--t-warning)" />{{ v.strategicLevel }}
-								</span>
+						<div class="eh-aggr__section">
+							<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+								<MonoLabel>议程内容</MonoLabel>
+								<Btn variant="ghost" icon="edit" @click="openAgendaDialog">{{ sel.agenda ? '编辑议程' : '补充议程' }}</Btn>
 							</div>
+							<p style="margin:0;font-size:13px;color:var(--t-text2);line-height:1.7">{{ sel.agenda || '暂无议程内容' }}</p>
 						</div>
-					</div>
-
-					<div v-if="sel.services?.length" class="eh-aggr__section">
-						<MonoLabel :style="{ display: 'block', marginBottom: '8px' }">附加服务</MonoLabel>
-						<div style="display:flex;gap:6px;flex-wrap:wrap">
-							<span v-for="s in sel.services" :key="s" class="eh-aggr__svc-tag">{{ s }}</span>
-						</div>
-					</div>
 
 					<div class="eh-aggr__section">
 						<MonoLabel :style="{ display: 'block', marginBottom: '10px' }">审批进度</MonoLabel>
 						<ApprovalTimeline :nodes="sel.approvalNodes" />
 					</div>
 
+					<div class="eh-aggr__section">
+						<MonoLabel :style="{ display: 'block', marginBottom: '10px' }">操作历史</MonoLabel>
+						<div v-if="selHistory.length === 0" style="font-size:12px;color:var(--t-text3);padding:8px 0">暂无历史记录</div>
+						<div v-else class="eh-aggr__timeline">
+							<div v-for="(evt, idx) in selHistory" :key="idx" class="eh-aggr__tl-item">
+								<div class="eh-aggr__tl-left">
+									<div class="eh-aggr__tl-dot" :data-type="evt.eventType"></div>
+									<div v-if="idx < selHistory.length - 1" class="eh-aggr__tl-line"></div>
+								</div>
+								<div class="eh-aggr__tl-body">
+									<div class="eh-aggr__tl-head">
+										<span class="eh-aggr__tl-tag" :data-type="evt.eventType">{{ historyLabel(evt.eventType) }}</span>
+										<MonoLabel>{{ evt.eventTime }}</MonoLabel>
+									</div>
+									<div class="eh-aggr__tl-desc">{{ evt.eventDesc }}</div>
+									<div v-if="evt.operator" class="eh-aggr__tl-meta">操作人：{{ evt.operator }}</div>
+									<div v-if="evt.remark" class="eh-aggr__tl-remark">{{ evt.remark }}</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
 					<div class="eh-aggr__actions" v-if="sel.status === 'pending'">
-						<Btn variant="success" icon="check" v-auth="'eh_apply_approve'" @click="onAction('approve')">审批通过</Btn>
-						<Btn variant="danger" icon="x" v-auth="'eh_apply_reject'" @click="onAction('reject')">驳回申请</Btn>
-						<Btn variant="ghost" icon="send" v-auth="'eh_apply_forward'" @click="onAction('forward')">转交他人</Btn>
+						<Btn variant="success" icon="check" v-auth="'eh_approval_node_edit'" @click="onAction('approve')">审批通过</Btn>
+						<Btn variant="danger" icon="x" v-auth="'eh_approval_node_edit'" @click="onAction('reject')">驳回申请</Btn>
 					</div>
 				</Card>
 			</div>
@@ -131,24 +132,9 @@
 		<!-- 审批动作弹层 -->
 		<el-dialog v-model="actionVisible" :title="actionTitle" width="460" :close-on-click-modal="false">
 			<div style="display:flex;flex-direction:column;gap:14px">
-				<div class="eh-aggr__alert" :data-type="currentAction === 'approve' ? 'success' : currentAction === 'reject' ? 'danger' : 'info'">
+				<div class="eh-aggr__alert" :data-type="currentAction === 'approve' ? 'success' : 'danger'">
 					<Ic :n="currentAction === 'approve' ? 'checkCircle' : 'alertTri'" :size="13" :color="currentAction === 'approve' ? 'var(--t-success)' : 'var(--t-danger)'" />
-					<span>{{ currentAction === 'approve' ? '通过后将自动流转至下一级，申请人收到站内通知。' : currentAction === 'reject' ? '驳回后申请人可查看原因并重新提交。' : '请选择目标审批人。' }}</span>
-				</div>
-				<div v-if="currentAction === 'forward'">
-					<MonoLabel :style="{ display: 'block', marginBottom: '6px' }">目标审批人</MonoLabel>
-					<el-select
-						v-model="targetApprover"
-						filterable
-						remote
-						clearable
-						style="width:100%"
-						placeholder="输入用户名搜索"
-						:remote-method="queryApprovers"
-						:loading="approverLoading"
-					>
-						<el-option v-for="item in approverOptions" :key="item.value" :label="item.label" :value="item.value" />
-					</el-select>
+					<span>{{ currentAction === 'approve' ? '通过后申请将直接完成审批，申请人收到站内通知。' : '驳回后申请人可查看原因并重新提交。' }}</span>
 				</div>
 				<FancyInput :label="currentAction === 'reject' ? '驳回原因' : '审批意见'" :required="currentAction === 'reject'">
 					<textarea v-model="actionComment" :placeholder="currentAction === 'approve' ? '审批意见（选填）' : '请说明原因（必填）'" class="eh-input__field eh-input__field--textarea" rows="4" />
@@ -157,26 +143,33 @@
 			<template #footer>
 				<Btn variant="ghost" @click="actionVisible = false" style="margin-right:8px">取消</Btn>
 				<Btn
-					:variant="currentAction === 'approve' ? 'success' : currentAction === 'reject' ? 'danger' : 'primary'"
-					:disabled="(currentAction === 'reject' && !actionComment.trim()) || (currentAction === 'forward' && !targetApprover)"
+					:variant="currentAction === 'approve' ? 'success' : 'danger'"
+					:disabled="currentAction === 'reject' && !actionComment.trim()"
 					@click="submitAction"
 				>
-					{{ currentAction === 'approve' ? '确认通过' : currentAction === 'reject' ? '确认驳回' : '确认转交' }}
+					{{ currentAction === 'approve' ? '确认通过' : '确认驳回' }}
 				</Btn>
 			</template>
-		</el-dialog>
+			</el-dialog>
 
-		<FormDialog ref="formDialogRef" @refresh="loadData" />
+			<el-dialog v-model="agendaVisible" title="补充议程" width="520" :close-on-click-modal="false">
+				<FancyInput label="议程内容" type="textarea" v-model="agendaText" placeholder="补充本次会议议程" />
+				<template #footer>
+					<Btn variant="ghost" style="margin-right:8px" @click="agendaVisible = false">取消</Btn>
+					<Btn variant="primary" :disabled="agendaSaving" @click="submitAgenda">{{ agendaSaving ? '保存中…' : '保存议程' }}</Btn>
+				</template>
+			</el-dialog>
+
+			<FormDialog ref="formDialogRef" @refresh="loadData" />
 	</div>
 </template>
 
 <script lang="ts" name="ehapply" setup>
-import { computed, ref, defineAsyncComponent, onMounted } from 'vue';
-import { ElDialog, ElMessage, ElOption, ElSelect } from 'element-plus';
+import { computed, ref, defineAsyncComponent, onMounted, watch } from 'vue';
+import { ElDialog, ElMessage } from 'element-plus';
 import { Card, Btn, Badge, Ic, MonoLabel, ApprovalTimeline, FancyInput } from '/@/components/eh';
-import { fetchAggregateList, submitApprovalAction } from '/@/api/eh/apply';
-import { pageList } from '/@/api/admin/user';
-import type { Application } from '/@/components/eh/mock';
+import { fetchAggregateList, submitApprovalAction, getObj, updateAgenda } from '/@/api/eh/apply';
+import type { Application, ApplyHistoryEvent } from '/@/components/eh/mock';
 
 const FormDialog = defineAsyncComponent(() => import('./form.vue'));
 
@@ -186,11 +179,28 @@ const filter = ref<'all' | 'pending' | 'approved' | 'completed' | 'rejected'>('a
 const formDialogRef = ref();
 
 const actionVisible = ref(false);
-const currentAction = ref<'approve' | 'reject' | 'forward'>('approve');
+const currentAction = ref<'approve' | 'reject'>('approve');
 const actionComment = ref('');
-const targetApprover = ref('');
-const approverLoading = ref(false);
-const approverOptions = ref<{ label: string; value: string }[]>([]);
+const selHistory = ref<ApplyHistoryEvent[]>([]);
+const agendaVisible = ref(false);
+const agendaSaving = ref(false);
+const agendaText = ref('');
+
+watch(sel, async (app) => {
+	selHistory.value = [];
+	if (!app) return;
+	try {
+		const res = await getObj(app.id.replace('EH-', ''));
+		const raw = res?.data;
+		selHistory.value = (raw?.history || []).map((h: any): ApplyHistoryEvent => ({
+			eventType: h.eventType || '',
+			eventDesc: h.eventDesc || '',
+			operator: h.operator || '',
+			remark: h.remark || null,
+			eventTime: h.eventTime ? String(h.eventTime).replace('T', ' ').slice(0, 16) : '',
+		}));
+	} catch { /* 加载失败静默 */ }
+});
 
 onMounted(loadData);
 
@@ -213,9 +223,10 @@ function fmtTime(v?: string) {
 
 function toApp(raw: any): Application {
 	return {
-		id: `EH-${raw.id}`,
-		title: raw.title || '-',
-		unit: raw.unit || '-',
+			id: `EH-${raw.id}`,
+			title: raw.title || '-',
+			meetingNature: raw.meetingNature || 'external',
+			unit: raw.unit || '-',
 		industry: raw.industry || '-',
 		district: raw.district || '-',
 		applicant: raw.applicant || '-',
@@ -241,9 +252,11 @@ function toApp(raw: any): Application {
 				comment: n.comment || '',
 			} as any),
 			id: n.id,
-		})),
-		headCount: raw.headCount || 0,
-		agenda: raw.agenda || '',
+			})),
+			headCount: raw.headCount || 0,
+			customerCount: raw.customerCount ?? raw.headCount ?? 0,
+			internalCount: raw.internalCount ?? 0,
+			agenda: raw.agenda || '',
 		created: fmtTime(raw.created),
 		opportunityCode: raw.opportunityCode || '',
 		visitRecord: raw.actualHeadCount
@@ -264,7 +277,10 @@ async function loadData() {
 	try {
 		const res = await fetchAggregateList();
 		apps.value = (res.data || []).map(toApp);
-		if (!sel.value && apps.value.length > 0) sel.value = apps.value[0];
+		const prevId = sel.value?.id;
+		sel.value = prevId
+			? (apps.value.find((a) => a.id === prevId) ?? apps.value[0] ?? null)
+			: (apps.value[0] ?? null);
 	} catch (e: any) {
 		ElMessage.error(e?.msg || '加载申请数据失败');
 	}
@@ -282,45 +298,68 @@ const shown = computed(() => (filter.value === 'all' ? apps.value : apps.value.f
 
 const actionTitle = computed(() => (currentAction.value === 'approve' ? '确认审批通过' : currentAction.value === 'reject' ? '驳回申请' : '转交审批'));
 
+function recordTitle(a: Application) {
+	const district = a.district && a.district !== '-' ? a.district : '未填区县';
+	const unit = a.unit && a.unit !== '-' ? a.unit : '未填来访单位';
+	return `${district} · ${unit}`;
+}
+
+function recordStartLabel(a: Application) {
+	const [date = '—', time = '—'] = a.startTime.split(' ');
+	return `${date} · ${time}开始`;
+}
+
 function kvRows(a: Application) {
 	return [
 		{ key: '来访单位', value: a.unit, icon: 'building' },
-		{ key: '参观日期', value: a.startTime.split(' ')[0], icon: 'calendar' },
-		{ key: '使用时段', value: `${a.startTime.split(' ')[1]} — ${a.endTime.split(' ')[1]}`, icon: 'clock' },
-		{ key: '预计人数', value: `${a.headCount} 人`, icon: 'users' },
-		{ key: '最高领导', value: a.leader, icon: 'user' },
-		{ key: '申请部门', value: a.dept, icon: 'briefcase' },
-	];
+			{ key: '所属行业', value: a.industry, icon: 'list' },
+			{ key: '所属区县', value: a.district, icon: 'mapPin' },
+			{ key: '会议性质', value: a.meetingNature === 'internal' ? '内部' : '外部', icon: 'clipboard' },
+			{ key: '参观日期', value: a.startTime.split(' ')[0], icon: 'calendar' },
+			{ key: '会议正式开始时间', value: a.startTime.split(' ')[1] || '—', icon: 'clock' },
+			{ key: '客户人数', value: `${a.customerCount ?? a.headCount} 人`, icon: 'users' },
+			{ key: '自有人员人数', value: `${a.internalCount ?? 0} 人`, icon: 'users' },
+			{ key: '我公司陪同领导', value: a.leader, icon: 'user' },
+		];
+	}
+
+function historyLabel(eventType: string): string {
+	const map: Record<string, string> = {
+		submit: '提交申请', resubmit: '重新提交', approve: '审批通过',
+		reject: '审批驳回', reschedule: '申请改期', cancel: '取消申请',
+	};
+	return map[eventType] || eventType;
 }
 
 function onNew() {
 	formDialogRef.value?.openDialog();
 }
 
-function onAction(type: 'approve' | 'reject' | 'forward') {
-	currentAction.value = type;
-	actionComment.value = '';
-	targetApprover.value = '';
-	actionVisible.value = true;
-	if (type === 'forward') {
-		queryApprovers('');
+function openAgendaDialog() {
+	if (!sel.value) return;
+	agendaText.value = sel.value.agenda || '';
+	agendaVisible.value = true;
+}
+
+async function submitAgenda() {
+	if (!sel.value) return;
+	agendaSaving.value = true;
+	try {
+		await updateAgenda(sel.value.id.replace('EH-', ''), { agenda: agendaText.value });
+		ElMessage.success('议程已保存');
+		agendaVisible.value = false;
+		await loadData();
+	} catch (e: any) {
+		ElMessage.error(e?.msg || '保存议程失败');
+	} finally {
+		agendaSaving.value = false;
 	}
 }
 
-async function queryApprovers(keyword: string) {
-	approverLoading.value = true;
-	try {
-		const res = await pageList({ current: 1, size: 20, username: keyword });
-		const records = res?.data?.records || [];
-		approverOptions.value = records.map((item: any) => ({
-			label: item.name ? `${item.username} · ${item.name}` : item.username,
-			value: item.username,
-		}));
-	} catch (e: any) {
-		ElMessage.error(e?.msg || '加载审批人失败');
-	} finally {
-		approverLoading.value = false;
-	}
+function onAction(type: 'approve' | 'reject') {
+	currentAction.value = type;
+	actionComment.value = '';
+	actionVisible.value = true;
 }
 
 async function submitAction() {
@@ -333,10 +372,9 @@ async function submitAction() {
 			nodeId: node ? (node as any).id : undefined,
 			action: t,
 			comment: actionComment.value,
-			targetApprover: targetApprover.value || undefined,
 		});
 		actionVisible.value = false;
-		ElMessage.success(t === 'approve' ? '审批通过，流程已流转' : t === 'reject' ? '已驳回，申请人将收到通知' : '已转交');
+		ElMessage.success(t === 'approve' ? '审批通过，申请人将收到通知' : '已驳回，申请人将收到通知');
 		await loadData();
 	} catch (e: any) {
 		ElMessage.error(e?.msg || '审批操作失败');
@@ -388,9 +426,10 @@ async function submitAction() {
 	font-family: inherit;
 }
 .eh-aggr__chip--active {
-	border-color: var(--t-text1);
-	background: var(--t-text1);
-	color: #fff;
+	border-color: var(--t-accent-border);
+	background: var(--t-accent-light);
+	color: var(--t-accent-strong);
+	box-shadow: 0 1px 3px rgba(154, 95, 53, 0.12);
 }
 .eh-aggr__chip-cnt {
 	background: #f0ede8;
@@ -400,8 +439,8 @@ async function submitAction() {
 	font-size: 11px;
 }
 .eh-aggr__chip-cnt--active {
-	background: rgba(255, 255, 255, 0.2);
-	color: #fff;
+	background: #fffaf2;
+	color: var(--t-accent);
 }
 
 .eh-aggr__body {
@@ -443,6 +482,10 @@ async function submitAction() {
 	font-size: 14px;
 	font-weight: 700;
 	color: var(--t-text1);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .eh-aggr__item-metas {
 	display: flex;
@@ -455,6 +498,14 @@ async function submitAction() {
 	gap: 4px;
 	font-size: 11px;
 	color: var(--t-text3);
+}
+.eh-aggr__item-topic {
+	padding: 1px 6px;
+	border-radius: 4px;
+	background: var(--t-bg);
+	border: 1px solid var(--t-border);
+	color: var(--t-text2) !important;
+	font-weight: 600;
 }
 .eh-aggr__chain {
 	display: flex;
@@ -539,8 +590,8 @@ async function submitAction() {
 	width: 30px;
 	height: 30px;
 	border-radius: 50%;
-	background: var(--t-text1);
-	color: #fff;
+	background: var(--t-accent);
+	color: #fffaf2;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -565,8 +616,9 @@ async function submitAction() {
 	font-weight: 600;
 	padding: 3px 8px;
 	border-radius: 3px;
-	background: var(--t-text1);
-	color: #fff;
+	background: var(--t-accent-light);
+	color: var(--t-accent-strong);
+	border: 1px solid var(--t-accent-border);
 }
 .eh-aggr__actions {
 	display: flex;
@@ -585,4 +637,31 @@ async function submitAction() {
 .eh-aggr__alert[data-type='success'] { background: var(--t-success-light); border: 1px solid #2c641533; color: var(--t-success); }
 .eh-aggr__alert[data-type='danger'] { background: var(--t-danger-light); border: 1px solid #c41c1c33; color: var(--t-danger); }
 .eh-aggr__alert[data-type='info'] { background: var(--t-bg); border: 1px solid var(--t-border); color: var(--t-text2); }
+.eh-aggr__timeline { display: flex; flex-direction: column; }
+.eh-aggr__tl-item { display: flex; gap: 10px; min-height: 52px; }
+.eh-aggr__tl-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 12px; padding-top: 3px; }
+.eh-aggr__tl-dot {
+	width: 10px; height: 10px; border-radius: 50%; background: var(--t-text3);
+	flex-shrink: 0; border: 2px solid var(--t-surface); box-shadow: 0 0 0 2px var(--t-text3);
+}
+.eh-aggr__tl-dot[data-type='submit'],
+.eh-aggr__tl-dot[data-type='resubmit'] { background: var(--t-accent); box-shadow: 0 0 0 2px var(--t-accent); }
+.eh-aggr__tl-dot[data-type='approve'] { background: var(--t-success); box-shadow: 0 0 0 2px var(--t-success); }
+.eh-aggr__tl-dot[data-type='reject'] { background: var(--t-danger); box-shadow: 0 0 0 2px var(--t-danger); }
+.eh-aggr__tl-dot[data-type='reschedule'] { background: var(--t-warning); box-shadow: 0 0 0 2px var(--t-warning); }
+.eh-aggr__tl-line { flex: 1; width: 1px; background: var(--t-border); margin: 3px 0; }
+.eh-aggr__tl-body { flex: 1; padding-bottom: 14px; }
+.eh-aggr__tl-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.eh-aggr__tl-tag {
+	font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 3px;
+	background: var(--t-bg); color: var(--t-text2); border: 1px solid var(--t-border);
+}
+.eh-aggr__tl-tag[data-type='submit'],
+.eh-aggr__tl-tag[data-type='resubmit'] { background: var(--t-accent-light); color: var(--t-accent); border-color: var(--t-accent-border); }
+.eh-aggr__tl-tag[data-type='approve'] { background: var(--t-success-light); color: var(--t-success); border-color: #2c641533; }
+.eh-aggr__tl-tag[data-type='reject'] { background: var(--t-danger-light); color: var(--t-danger); border-color: #c41c1c33; }
+.eh-aggr__tl-tag[data-type='reschedule'] { background: #fffbeb; color: #b45309; border-color: #92400e33; }
+.eh-aggr__tl-desc { font-size: 12px; color: var(--t-text1); font-weight: 500; }
+.eh-aggr__tl-meta { font-size: 11px; color: var(--t-text3); margin-top: 2px; }
+.eh-aggr__tl-remark { font-size: 11px; color: var(--t-text2); margin-top: 3px; font-style: italic; }
 </style>

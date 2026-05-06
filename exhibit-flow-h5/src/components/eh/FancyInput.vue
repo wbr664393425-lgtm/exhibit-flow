@@ -62,26 +62,35 @@ function onInput(e: Event) {
   color: var(--t-accent);
   margin-right: 3px;
 }
-.eh-input__field {
-  border: 1px solid var(--t-border);
+.eh-input__field,
+:slotted(.eh-input__field) {
+  border: 1px solid var(--t-border-dark);
   border-radius: 4px;
   padding: 8px 10px;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--t-text1);
   outline: none;
-  background: var(--t-surface);
+  background: #fffefa;
   width: 100%;
   box-sizing: border-box;
   transition: border-color 0.15s;
   font-family: inherit;
 }
-.eh-input__field:disabled {
+.eh-input__field:disabled,
+:slotted(.eh-input__field:disabled) {
   background: var(--t-bg);
 }
-.eh-input__field:focus {
+.eh-input__field:focus,
+:slotted(.eh-input__field:focus) {
   border-color: var(--t-text1);
+  box-shadow: 0 0 0 2px rgba(20, 20, 19, 0.08);
 }
-.eh-input__field--textarea {
+.eh-input__field::placeholder,
+:slotted(.eh-input__field::placeholder) {
+  color: #b0ada6;
+}
+.eh-input__field--textarea,
+:slotted(.eh-input__field--textarea) {
   resize: vertical;
   min-height: 72px;
 }

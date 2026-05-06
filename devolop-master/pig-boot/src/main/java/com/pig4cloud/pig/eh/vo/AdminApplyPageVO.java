@@ -16,6 +16,7 @@ public class AdminApplyPageVO {
 	@JsonSerialize(using = ToStringSerializer.class)
 	private Long id;
 	private String title;
+	private String meetingNature;
 	private String unit;
 	private String industry;
 	private String district;
@@ -26,6 +27,8 @@ public class AdminApplyPageVO {
 	private LocalDateTime endTime;
 	private String leader;
 	private Integer headCount;
+	private Integer customerCount;
+	private Integer internalCount;
 	private String agenda;
 	private String status;
 	private LocalDateTime created;

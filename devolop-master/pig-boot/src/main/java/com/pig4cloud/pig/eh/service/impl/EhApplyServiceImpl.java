@@ -25,14 +25,17 @@ import com.pig4cloud.pig.eh.dto.ApplyFormDTO;
 import com.pig4cloud.pig.eh.dto.ApplyRescheduleDTO;
 import com.pig4cloud.pig.eh.entity.EhApprovalNode;
 import com.pig4cloud.pig.eh.entity.EhApply;
+import com.pig4cloud.pig.eh.entity.EhApplyHistory;
 import com.pig4cloud.pig.eh.entity.EhApplyVisitor;
 import com.pig4cloud.pig.eh.entity.EhChangeLog;
 import com.pig4cloud.pig.eh.entity.EhVisitRecord;
 import com.pig4cloud.pig.eh.mapper.EhApprovalNodeMapper;
 import com.pig4cloud.pig.eh.mapper.EhApplyMapper;
+import com.pig4cloud.pig.eh.mapper.EhApplyHistoryMapper;
 import com.pig4cloud.pig.eh.mapper.EhApplyVisitorMapper;
 import com.pig4cloud.pig.eh.mapper.EhChangeLogMapper;
 import com.pig4cloud.pig.eh.mapper.EhVisitRecordMapper;
+import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.pig.eh.service.EhApplyService;
 import com.pig4cloud.pig.eh.service.EhNotificationService;
 import com.pig4cloud.pig.eh.vo.ApplyDetailVO;
@@ -61,6 +64,7 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 	private final EhApplyVisitorMapper ehApplyVisitorMapper;
 	private final EhVisitRecordMapper ehVisitRecordMapper;
 	private final EhChangeLogMapper ehChangeLogMapper;
+	private final EhApplyHistoryMapper ehApplyHistoryMapper;
 	private final EhNotificationService ehNotificationService;
 
 	/**
@@ -99,6 +103,7 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		ApplyDetailVO detail = new ApplyDetailVO();
 		detail.setId(apply.getId());
 		detail.setSubject(apply.getSubject());
+		detail.setMeetingNature(apply.getMeetingNature());
 		detail.setVisitorCompany(apply.getVisitorCompany());
 		detail.setIndustry(apply.getIndustry());
 		detail.setDistrict(apply.getDistrict());
@@ -109,6 +114,8 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		detail.setEndTime(apply.getEndTime());
 		detail.setTopLeaderTitle(apply.getTopLeaderTitle());
 		detail.setVisitorCount(apply.getVisitorCount());
+		detail.setCustomerCount(apply.getCustomerCount());
+		detail.setInternalCount(apply.getInternalCount());
 		detail.setAgenda(apply.getAgenda());
 		detail.setExtraServices(apply.getExtraServices());
 		detail.setStatus(apply.getStatus());
@@ -138,6 +145,22 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		if (visitRecord != null) {
 			detail.setOpportunityCode(visitRecord.getOpportunityCode());
 		}
+
+		List<EhApplyHistory> historyList = ehApplyHistoryMapper.selectList(
+			Wrappers.<EhApplyHistory>lambdaQuery()
+				.eq(EhApplyHistory::getApplyId, id)
+				.orderByDesc(EhApplyHistory::getEventTime, EhApplyHistory::getId)
+		);
+		detail.setHistory(historyList.stream().map(h -> {
+			ApplyDetailVO.HistoryVO hv = new ApplyDetailVO.HistoryVO();
+			hv.setEventType(h.getEventType());
+			hv.setEventDesc(h.getEventDesc());
+			hv.setOperator(h.getOperator());
+			hv.setRemark(h.getRemark());
+			hv.setEventTime(h.getEventTime());
+			return hv;
+		}).collect(Collectors.toList()));
+
 		return detail;
 	}
 
@@ -167,10 +190,26 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	public boolean updateAgenda(Long id, String agenda) {
+		EhApply patch = new EhApply();
+		patch.setId(id);
+		patch.setAgenda(agenda);
+		boolean updated = updateById(patch);
+		if (updated) {
+			recordHistory(id, "agenda", "补充议程", currentUsername(), agenda);
+		}
+		return updated;
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public boolean cancelApply(Long id, String reason) {
 		EhApply apply = getById(id);
 		if (apply == null) {
 			return false;
+		}
+		if (!"0".equals(apply.getStatus()) && !"1".equals(apply.getStatus()) && !"2".equals(apply.getStatus()) && !"5".equals(apply.getStatus())) {
+			throw new IllegalStateException("当前申请状态不允许取消");
 		}
 		EhApply patch = new EhApply();
 		patch.setId(id);
@@ -180,6 +219,7 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 			return false;
 		}
 		writeChangeLog(apply, "cancel", reason, null, null);
+		recordHistory(id, "cancel", "取消申请", currentUsername(), reason);
 		notifyApplicant(
 			apply,
 			"reminder",
@@ -196,18 +236,23 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		if (apply == null) {
 			return false;
 		}
+		if (!"1".equals(apply.getStatus()) && !"2".equals(apply.getStatus()) && !"5".equals(apply.getStatus())) {
+			throw new IllegalStateException("当前申请状态不允许改期");
+		}
 		LocalDateTime newStart = parseDateTime(dto.getNewDate(), dto.getNewSH());
 		LocalDateTime newEnd = parseDateTime(dto.getNewDate(), dto.getNewEH());
 		EhApply patch = new EhApply();
 		patch.setId(id);
 		patch.setStartTime(newStart);
 		patch.setEndTime(newEnd);
-		patch.setStatus("5");
+		patch.setStatus("1");
 		boolean updated = updateById(patch);
 		if (!updated) {
 			return false;
 		}
+		rebuildApprovalNodes(id, apply.getTopLeaderTitle());
 		writeChangeLog(apply, "reschedule", dto.getReason(), newStart, newEnd);
+		recordHistory(id, "reschedule", "申请改期", currentUsername(), dto.getReason());
 		notifyApplicant(
 			apply,
 			"reminder",
@@ -253,6 +298,12 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		replaceVisitors(entity.getId(), dto.getVisitors());
 		if ("1".equals(status)) {
 			rebuildApprovalNodes(entity.getId(), entity.getTopLeaderTitle());
+			String operator = currentUsername();
+			if (id == null) {
+				recordHistory(entity.getId(), "submit", "提交申请", operator, null);
+			} else {
+				recordHistory(entity.getId(), "resubmit", "重新提交申请", operator, null);
+			}
 		} else {
 			ehApprovalNodeMapper.delete(
 				Wrappers.<EhApprovalNode>lambdaQuery().eq(EhApprovalNode::getApplyId, entity.getId())
@@ -263,19 +314,25 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 
 	private void fillApply(EhApply entity, ApplyFormDTO dto, String status) {
 		entity.setSubject(dto.getTitle());
+		entity.setMeetingNature(defaultString(dto.getMeetingNature(), "external"));
 		entity.setAgenda(dto.getAgenda());
-		entity.setStartTime(parseDateTime(dto.getStartDate(), dto.getStartHour()));
-		entity.setEndTime(parseDateTime(dto.getStartDate(), dto.getEndHour()));
-		entity.setVisitorCompany(dto.getUnit());
+		LocalDateTime startTime = parseDateTime(dto.getStartDate(), defaultString(dto.getMeetingTime(), dto.getStartHour()));
+		entity.setStartTime(startTime);
+		entity.setEndTime(StringUtils.hasText(dto.getEndHour()) ? parseDateTime(dto.getStartDate(), dto.getEndHour()) : startTime);
+		entity.setVisitorCompany(defaultString(dto.getUnit(), ""));
 		entity.setIndustry(dto.getIndustry());
-		entity.setVisitorCount(dto.getHeadCount());
+		int customerCount = dto.getCustomerCount() == null ? (dto.getHeadCount() == null ? 0 : dto.getHeadCount()) : dto.getCustomerCount();
+		int internalCount = dto.getInternalCount() == null ? 0 : dto.getInternalCount();
+		entity.setCustomerCount(customerCount);
+		entity.setInternalCount(internalCount);
+		entity.setVisitorCount(customerCount + internalCount);
 		entity.setTopLeaderTitle(dto.getLeader());
-		entity.setApplicant(dto.getApplicant());
-		entity.setApplicantDept(dto.getDept());
-		entity.setPhone(dto.getPhone());
+		entity.setApplicant(defaultString(dto.getApplicant(), currentUsername()));
+		entity.setApplicantDept(defaultString(dto.getDept(), ""));
+		entity.setPhone(defaultString(dto.getPhone(), ""));
 		entity.setDistrict(dto.getDistrict());
-		entity.setRealName(dto.getApplicant());
-		entity.setRealPhone(dto.getPhone());
+		entity.setRealName(defaultString(dto.getApplicant(), currentUsername()));
+		entity.setRealPhone(defaultString(dto.getPhone(), ""));
 		entity.setExtraServices(dto.getServices() == null ? "" : String.join(",", dto.getServices()));
 		entity.setStatus(status);
 		entity.setRemark(dto.getRemark());
@@ -306,23 +363,7 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 			Wrappers.<EhApprovalNode>lambdaQuery().eq(EhApprovalNode::getApplyId, applyId)
 		);
 		LocalDateTime now = LocalDateTime.now();
-		List<EhApprovalNode> nodes = new ArrayList<>();
-		nodes.add(buildNode(applyId, 1, "部门领导", "pending", now));
-		nodes.add(buildNode(applyId, 2, "展厅主管", "waiting", now));
-		if (shouldAddLeaderNode(leader)) {
-			nodes.add(buildNode(applyId, 3, leader, "waiting", now));
-		}
-		for (EhApprovalNode node : nodes) {
-			ehApprovalNodeMapper.insert(node);
-		}
-	}
-
-	private boolean shouldAddLeaderNode(String leader) {
-		if (!StringUtils.hasText(leader)) {
-			return false;
-		}
-		String normalized = leader.trim();
-		return normalized.contains("总经理") || normalized.contains("分管副总");
+		ehApprovalNodeMapper.insert(buildNode(applyId, 1, "管理员", "pending", now));
 	}
 
 	private EhApprovalNode buildNode(Long applyId, Integer level, String approver, String status, LocalDateTime now) {
@@ -362,6 +403,25 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		return item;
 	}
 
+	public void recordHistory(Long applyId, String eventType, String eventDesc, String operator, String remark) {
+		EhApplyHistory h = new EhApplyHistory();
+		h.setApplyId(applyId);
+		h.setEventType(eventType);
+		h.setEventDesc(eventDesc);
+		h.setOperator(operator);
+		h.setRemark(remark);
+		h.setEventTime(LocalDateTime.now());
+		ehApplyHistoryMapper.insert(h);
+	}
+
+	private String currentUsername() {
+		try {
+			return SecurityUtils.getUser().getUsername();
+		} catch (Exception e) {
+			return "";
+		}
+	}
+
 	private void writeChangeLog(EhApply apply, String changeType, String reason, LocalDateTime newStart, LocalDateTime newEnd) {
 		EhChangeLog log = new EhChangeLog();
 		log.setApplyId(apply.getId());
@@ -399,6 +459,8 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		EhCalendarEventVO row = new EhCalendarEventVO();
 		row.setId(String.valueOf(apply.getId()));
 		row.setTitle(apply.getSubject());
+		row.setUnit(apply.getVisitorCompany());
+		row.setDistrict(apply.getDistrict());
 		if (apply.getStartTime() != null) {
 			row.setStart(apply.getStartTime().toLocalDate().toString());
 			row.setStartTime(apply.getStartTime().format(TIME_FMT));
@@ -414,9 +476,12 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 		EhCalendarExportVO row = new EhCalendarExportVO();
 		row.setId(String.valueOf(apply.getId()));
 		row.setTitle(apply.getSubject());
+		row.setUnit(apply.getVisitorCompany());
 		row.setStart(apply.getStartTime() == null ? "" : apply.getStartTime().toLocalDate().toString());
 		row.setStartTime(apply.getStartTime() == null ? "" : apply.getStartTime().format(TIME_FMT));
 		row.setEnd(apply.getEndTime() == null ? "" : apply.getEndTime().format(TIME_FMT));
+		row.setApplicant(apply.getApplicant());
+		row.setDept(apply.getApplicantDept());
 		row.setStatus(convertCalendarStatusText(apply.getStatus()));
 		return row;
 	}
@@ -432,17 +497,24 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 	}
 
 	private String convertCalendarStatusText(String status) {
-		if ("2".equals(status)) {
-			return "已通过";
-		}
-		if ("5".equals(status)) {
-			return "已改期";
-		}
-		return "待审批";
+		if (status == null) return "草稿";
+		return switch (status) {
+			case "0" -> "草稿";
+			case "1" -> "审批中";
+			case "2" -> "已批准";
+			case "3" -> "已驳回";
+			case "4" -> "已取消";
+			case "5" -> "已改期";
+			default -> "未知";
+		};
 	}
 
 	private LocalDateTime parseDateTime(String date, String hour) {
-		return LocalDate.parse(date).atTime(Integer.parseInt(hour), 0);
+		String normalized = StringUtils.hasText(hour) ? hour.trim() : "00";
+		String[] parts = normalized.split(":");
+		int h = Integer.parseInt(parts[0]);
+		int m = parts.length > 1 ? Integer.parseInt(parts[1]) : 0;
+		return LocalDate.parse(date).atTime(h, m);
 	}
 
 	private String defaultString(String primary, String fallback) {

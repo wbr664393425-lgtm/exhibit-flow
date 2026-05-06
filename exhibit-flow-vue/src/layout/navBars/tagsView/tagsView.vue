@@ -596,8 +596,8 @@ watch(
 
 <style scoped lang="scss">
 .layout-navbars-tagsview {
-	background-color: var(--el-color-white);
-	border-bottom: 1px solid var(--next-border-color-light);
+	background-color: #fffaf2;
+	border-bottom: 1px solid #eadfce;
 	position: relative;
 	z-index: 4;
 	:deep(.el-scrollbar__wrap) {
@@ -619,7 +619,9 @@ watch(
 			line-height: 26px;
 			display: flex;
 			align-items: center;
-			border: 1px solid var(--el-border-color-lighter);
+			border: 1px solid #eadfce;
+			background: #fffdf8;
+			color: #6a5947;
 			padding: 0 15px;
 			margin-right: 5px;
 			border-radius: 2px;
@@ -628,9 +630,9 @@ watch(
 			cursor: pointer;
 			justify-content: space-between;
 			&:hover {
-				background-color: var(--el-color-primary-light-9);
-				color: var(--el-color-primary);
-				border-color: var(--el-color-primary-light-5);
+				background-color: #f7efe3;
+				color: #8b522a;
+				border-color: #dec8ab;
 			}
 			&-iconfont {
 				position: relative;
@@ -646,8 +648,8 @@ watch(
 				line-height: 14px;
 				right: -5px;
 				&:hover {
-					color: var(--el-color-white);
-					background-color: var(--el-color-primary-light-3);
+					color: #fffaf2;
+					background-color: #b46d40;
 				}
 			}
 			.layout-icon-active {
@@ -658,9 +660,10 @@ watch(
 			}
 		}
 		.is-active {
-			color: var(--el-color-white);
-			background: var(--el-color-primary);
-			border-color: var(--el-color-primary);
+			color: #8b522a;
+			background: #efe2cf;
+			border-color: #d9c2a7;
+			box-shadow: 0 1px 3px rgba(154, 95, 53, 0.12);
 			transition: border-color 3s ease;
 		}
 	}

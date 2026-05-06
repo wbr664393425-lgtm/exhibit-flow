@@ -61,3 +61,11 @@ export const submitReturnSign = (data: Object) => {
 		data,
 	});
 };
+
+export const exportVisitRecords = () => {
+	return request({
+		url: '/admin/eh/visit/export',
+		method: 'get',
+		responseType: 'blob',
+	});
+};

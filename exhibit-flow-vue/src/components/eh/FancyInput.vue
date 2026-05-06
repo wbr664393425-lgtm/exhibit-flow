@@ -5,8 +5,29 @@
 			{{ label }}
 		</MonoLabel>
 		<slot>
+			<el-date-picker
+				v-if="type === 'datetime'"
+				:model-value="modelValue as string"
+				type="datetime"
+				value-format="YYYY-MM-DD HH:mm:ss"
+				format="YYYY-MM-DD HH:mm"
+				:placeholder="placeholder || '请选择日期时间'"
+				:disabled="disabled"
+				style="width:100%"
+				@update:model-value="(v: string) => emit('update:modelValue', v || '')"
+			/>
+			<el-time-picker
+				v-else-if="type === 'time'"
+				:model-value="modelValue as string"
+				value-format="HH:mm"
+				format="HH:mm"
+				:placeholder="placeholder || '请选择时间'"
+				:disabled="disabled"
+				style="width:100%"
+				@update:model-value="(v: string) => emit('update:modelValue', v || '')"
+			/>
 			<input
-				v-if="type !== 'textarea'"
+				v-else-if="type !== 'textarea'"
 				:type="type"
 				:value="modelValue"
 				:placeholder="placeholder"
@@ -29,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { ElDatePicker, ElTimePicker } from 'element-plus';
 import MonoLabel from './MonoLabel.vue';
 withDefaults(
 	defineProps<{

@@ -47,7 +47,7 @@
 		</div>
 		<el-dropdown :show-timeout="70" :hide-timeout="50" @command="onHandleCommandClick">
 			<span class="layout-navbars-breadcrumb-user-link">
-				<img :src="userInfos.user.avatar" class="layout-navbars-breadcrumb-user-link-photo mr5" />
+				<img :src="userInfos.user.avatar || defaultAvatar" @error="(e:any) => (e.target.src = defaultAvatar)" class="layout-navbars-breadcrumb-user-link-photo mr5" />
 				{{ userInfos.user.username }}
 				<el-icon class="el-icon--right">
 					<ele-ArrowDown />
@@ -79,6 +79,7 @@ import mittBus from '/@/utils/mitt';
 import { Session, Local } from '/@/utils/storage';
 import { formatAxis } from '/@/utils/formatTime';
 import { useMsg } from '/@/stores/msg';
+import defaultAvatar from '/@/assets/default-avatar.svg';
 
 // 引入组件
 const GlobalWebsocket = defineAsyncComponent(() => import('/@/components/Websocket/index.vue'));
@@ -166,14 +167,17 @@ const onHandleCommandClick = (path: string) => {
 			},
 		})
 			.then(async () => {
-        // 关闭全部的标签页
-        mittBus.emit('onCurrentContextmenuClick', Object.assign({}, { contextMenuClickId: 3, ...router }));
-        // 调用注销token接口
-				await logout();
-				// 清除缓存/token等
-				Session.clear();
-				// 使用 reload 时，不需要调用 resetRoute() 重置路由
-				window.location.reload();
+				// 关闭全部的标签页
+				mittBus.emit('onCurrentContextmenuClick', Object.assign({}, { contextMenuClickId: 3, ...router }));
+				try {
+					// 调用注销token接口
+					await logout();
+				} finally {
+					// 清除缓存/token等
+					Session.clear();
+					// 使用 reload 时，不需要调用 resetRoute() 重置路由
+					window.location.reload();
+				}
 			})
 			.catch(() => {});
 	} else if (path === 'personal') {

@@ -3,12 +3,15 @@
 		<div class="flex items-center justify-between">
 			<!-- 用户信息 -->
 			<div class="flex items-center gap-4">
-				<el-avatar 
-					:size="56" 
-					shape="circle" 
-					:src="userData.avatar"
-					class="ring-1 ring-gray-100" 
-				/>
+				<el-avatar
+					:size="56"
+					shape="circle"
+					:src="userData.avatar || defaultAvatar"
+					class="ring-1 ring-gray-100"
+					@error="() => true"
+				>
+					<img :src="defaultAvatar" style="width:100%;height:100%" />
+				</el-avatar>
 				<div>
 					<h3 class="text-lg font-semibold text-gray-800 mb-2">{{ userData.name }}</h3>
 					<div class="flex items-center gap-2 text-sm">
@@ -32,6 +35,7 @@
 <script setup lang="ts" name="currentUser">
 import { useUserInfo } from '/@/stores/userInfo';
 import { getObj } from '/@/api/admin/user';
+import defaultAvatar from '/@/assets/default-avatar.svg';
 
 const date = ref(new Date());
 

@@ -22,6 +22,7 @@ package com.pig4cloud.pig.eh.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.pig4cloud.pig.eh.entity.EhVisitRecord;
 import com.pig4cloud.pig.eh.vo.AdminVisitAggregateVO;
+import com.pig4cloud.pig.eh.vo.EhVisitRecordExportVO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -30,5 +31,7 @@ import java.util.List;
 public interface EhVisitRecordMapper extends BaseMapper<EhVisitRecord> {
 
 	List<AdminVisitAggregateVO> selectAdminVisitAggregateList();
+
+	List<EhVisitRecordExportVO> selectVisitExportList();
 
 }

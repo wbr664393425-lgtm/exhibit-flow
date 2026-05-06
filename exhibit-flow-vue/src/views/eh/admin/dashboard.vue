@@ -106,7 +106,7 @@
 								minWidth: '72px',
 							}"
 						>
-							<span style="color:#fff;font-size:11px;font-weight:600;white-space:nowrap">{{ d.stage }}</span>
+							<span style="color:#faf9f5;font-size:11px;font-weight:600;white-space:nowrap">{{ d.stage }}</span>
 						</div>
 						<span style="font-size:13px;font-weight:700;color:var(--t-text1)">{{ d.count }}</span>
 					</div>
@@ -126,10 +126,10 @@
 					:key="t.key"
 					:style="{
 						border: 'none',
-						background: exportTab === t.key ? 'var(--t-text1)' : 'transparent',
-						color: exportTab === t.key ? '#fff' : 'var(--t-text2)',
+						background: exportTab === t.key ? 'var(--t-accent)' : 'transparent',
+						color: exportTab === t.key ? '#faf9f5' : 'var(--t-text2)',
 						padding: '5px 12px',
-						borderRadius: '4px',
+						borderRadius: '6px',
 						cursor: 'pointer',
 						fontSize: '12px',
 						fontWeight: 600,
@@ -145,8 +145,8 @@
 			<div v-if="exportTab === 'excel'" style="overflow:auto;border:1px solid var(--t-border);border-radius:6px;max-height:400px">
 				<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:900px">
 					<thead>
-						<tr style="background:var(--t-text1)">
-							<th v-for="c in EXCEL_COLS" :key="c" style="padding:7px 10px;color:#fff;font-weight:600;white-space:nowrap;text-align:left;border-right:1px solid rgba(255,255,255,0.1);font-family:var(--t-font-mono);letter-spacing:0.03em">{{ c }}</th>
+						<tr style="background:var(--t-accent)">
+							<th v-for="c in EXCEL_COLS" :key="c" style="padding:7px 10px;color:#faf9f5;font-weight:600;white-space:nowrap;text-align:left;border-right:1px solid rgba(250,249,245,0.1);font-family:var(--t-font-mono);letter-spacing:0.03em">{{ c }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -156,7 +156,7 @@
 					</tbody>
 				</table>
 			</div>
-			<div v-else style="padding:16px;background:#f5f5f5;border-radius:6px;max-height:480px;overflow:auto;text-align:center;color:var(--t-text3);font-size:13px">
+			<div v-else style="padding:16px;background:var(--t-bg);border-radius:6px;max-height:480px;overflow:auto;text-align:center;color:var(--t-text3);font-size:13px">
 				Word 预览（poi-tl 按原模板回填生成存档版申请单）
 			</div>
 			<template #footer>
@@ -187,7 +187,7 @@ const city = ref<any[]>([]);
 const industry = ref<any[]>([]);
 const strategic = ref<any[]>([]);
 const funnel = ref<any[]>([]);
-const funnelColors = ['#111111', '#313130', '#626260', '#9c9fa5'];
+const funnelColors = ['#9a5f35', '#b8845f', '#d9c2a7', '#8f8a80'];
 
 const exportVisible = ref(false);
 const exportTab = ref<'excel' | 'docx'>('excel');
