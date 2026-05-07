@@ -127,6 +127,14 @@ public class EhApplyController {
 		return R.ok(ehApplyService.submitApply(dto));
 	}
 
+	@PostMapping("/complete")
+	@SysLog("新增已完成展厅记录")
+	@HasPermission("eh_apply_add")
+	@Operation(summary = "管理端新增已完成记录")
+	public R complete(@RequestBody ApplyFormDTO dto) {
+		return R.ok(ehApplyService.saveCompleted(dto));
+	}
+
 	@PutMapping
 	@SysLog("修改展厅申请")
 	@HasPermission("eh_apply_edit")

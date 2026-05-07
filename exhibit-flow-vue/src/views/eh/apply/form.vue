@@ -1,7 +1,7 @@
 <template>
 	<el-dialog
 		v-model="visible"
-			:title="form.id ? '编辑记录' : '新增记录'"
+		:title="form.id ? '编辑记录' : '新增记录'"
 		width="680"
 		:close-on-click-modal="false"
 		class="eh-scope eh-form-dlg"
@@ -11,14 +11,14 @@
 
 			<!-- Step 1：基本信息 -->
 			<div v-if="step === 1" class="eh-new__grid eh-new__grid--col">
-					<FancySelect label="会议主题" v-model="form.title" :options="MEETING_TOPICS" required />
+				<FancySelect label="会议主题" v-model="form.title" :options="MEETING_TOPICS" required />
 
-					<div class="eh-new__grid eh-new__grid--2col">
-						<FancySelect label="会议性质" v-model="form.meetingNature" :options="MEETING_NATURE_OPTIONS" required />
-						<FancyInput label="来访单位" v-model="form.unit" placeholder="单位全称" required />
-					</div>
+				<div class="eh-new__grid eh-new__grid--2col">
+					<FancySelect label="会议性质" v-model="form.meetingNature" :options="MEETING_NATURE_OPTIONS" required />
+					<FancyInput label="来访单位" v-model="form.unit" placeholder="单位全称" required />
+				</div>
 
-					<FancySelect label="所属行业" v-model="form.industry" :options="INDUSTRIES" />
+				<FancySelect label="所属行业" v-model="form.industry" :options="INDUSTRIES" />
 
 				<FancyInput label="参观日期" required hint="点击选择日期，不可早于今天">
 					<div
@@ -51,15 +51,41 @@
 					</div>
 				</FancyInput>
 
-					<FancyInput label="会议正式开始时间" v-model="form.meetingTime" type="time" required hint="选择具体开始时间点" />
-
-					<div v-if="dayScheduleHint" class="eh-new__notice">
-						<Ic n="info" :size="13" color="#b45309" />
-						<span>{{ dayScheduleHint }}</span>
+				<FancyInput label="会议正式开始时间" required hint="选择具体开始时间点">
+					<div
+						class="eh-new__time-field"
+						role="button"
+						tabindex="0"
+						@click="openTimePicker"
+						@keydown.enter.prevent="openTimePicker"
+						@keydown.space.prevent="openTimePicker"
+					>
+						<div class="eh-new__time-inner">
+							<span :class="form.meetingTime ? 'eh-new__time-val' : 'eh-new__time-empty'">
+								{{ form.meetingTime || '选择开始时间' }}
+							</span>
+							<span class="eh-new__time-icon-row" aria-hidden="true">
+								<Ic n="clock" :size="15" color="var(--t-text3)" />
+								<Ic n="chevronDown" :size="12" color="var(--t-text3)" />
+							</span>
+						</div>
+						<input
+							ref="timeInputRef"
+							type="time"
+							tabindex="-1"
+							v-model="form.meetingTime"
+							class="eh-new__time-input"
+						/>
 					</div>
+				</FancyInput>
 
-					<div class="eh-new__grid eh-new__grid--2col">
-						<FancyInput label="我公司陪同领导">
+				<div v-if="dayScheduleHint" class="eh-new__notice">
+					<Ic n="info" :size="13" color="var(--t-warning)" />
+					<span>{{ dayScheduleHint }}</span>
+				</div>
+
+				<div class="eh-new__grid eh-new__grid--2col">
+					<FancyInput label="我公司陪同领导">
 						<div class="eh-leader-combo">
 							<input
 								v-model="form.leader"
@@ -79,13 +105,36 @@
 							</Transition>
 						</div>
 					</FancyInput>
-						<FancyInput label="客户人数" v-model="form.customerCount" placeholder="客户到场人数" type="number" />
-					</div>
+					<FancyInput label="客户人数" v-model="form.customerCount" placeholder="客户到场人数" type="number" />
+				</div>
 
-					<div class="eh-new__grid eh-new__grid--2col">
-						<FancySelect label="所属区县" v-model="form.district" :options="districts" required />
-						<FancyInput label="自有人员人数" v-model="form.internalCount" placeholder="我方到场人数" type="number" />
-					</div>
+				<div class="eh-new__grid eh-new__grid--2col">
+					<FancyInput label="所属区县/部门" required>
+						<div class="eh-leader-combo">
+							<input
+								v-model="form.district"
+								class="eh-input__field"
+								placeholder="请输入内部部门名称"
+								autocomplete="off"
+								@focus="districtOpen = true"
+								@blur="districtOpen = false"
+							/>
+							<Transition name="eh-leader-drop">
+								<div v-if="districtOpen && districts.length" class="eh-leader-combo__drop">
+									<div
+										v-for="opt in districts"
+										:key="opt"
+										class="eh-leader-combo__opt"
+										@mousedown.prevent="form.district = opt; districtOpen = false"
+									>
+										{{ opt }}
+									</div>
+								</div>
+							</Transition>
+						</div>
+					</FancyInput>
+					<FancyInput label="自有人员人数" v-model="form.internalCount" placeholder="我方到场人数" type="number" />
+				</div>
 
 				<FancyInput label="议程内容" type="textarea" v-model="form.agenda" placeholder="补充本次会议议程" />
 			</div>
@@ -94,7 +143,7 @@
 			<div v-else-if="step === 2" class="eh-new__grid eh-new__grid--col">
 				<div class="eh-new__success">
 					<Ic n="checkCircle" :size="14" color="var(--t-success)" />
-					<span>信息确认无误后点击提交，将自动发起审批流程</span>
+					<span>{{ form.id ? '信息确认无误后点击提交，将自动发起审批流程' : '信息确认无误后点击保存，将直接生成已完成记录' }}</span>
 				</div>
 				<div class="eh-new__summary">
 					<div
@@ -115,10 +164,10 @@
 			<div style="display:flex;justify-content:space-between;width:100%">
 				<Btn variant="ghost" icon="arrowLeft" @click="onPrev">{{ step === 1 ? '取消' : '上一步' }}</Btn>
 				<div style="display:flex;gap:8px">
-					<Btn v-if="step < 2" variant="ghost" @click="onDraft">存草稿</Btn>
+					<Btn v-if="step < 2 && form.id" variant="ghost" @click="onDraft">存草稿</Btn>
 					<Btn v-if="step < 2" variant="primary" icon="chevronRight" @click="onNext">下一步</Btn>
 					<Btn v-else variant="orange" icon="send" :disabled="saving" @click="onSubmit">
-						{{ saving ? '提交中…' : '提交申请' }}
+						{{ saving ? '保存中…' : form.id ? '提交申请' : '保存记录' }}
 					</Btn>
 				</div>
 			</div>
@@ -132,7 +181,7 @@ import { ElDialog, ElMessage } from 'element-plus';
 import { FancyInput, FancySelect, Btn, Ic, StepBar } from '/@/components/eh';
 import { INDUSTRIES } from '/@/components/eh/mock';
 import { getDicts } from '/@/api/admin/dict';
-import { fetchAggregateList, getObj, saveDraft, submitApply, updateAndSubmit, updateDraft } from '/@/api/eh/apply';
+import { fetchAggregateList, getObj, saveCompleted, saveDraft, updateAndSubmit, updateDraft } from '/@/api/eh/apply';
 
 const emit = defineEmits<{ (e: 'refresh'): void }>();
 
@@ -153,7 +202,9 @@ const visible = ref(false);
 const step = ref(1);
 const saving = ref(false);
 const leaderOpen = ref(false);
+const districtOpen = ref(false);
 const dateInputRef = ref<HTMLInputElement | null>(null);
+const timeInputRef = ref<HTMLInputElement | null>(null);
 const daySchedules = ref<string[]>([]);
 
 const minSelectableDate = computed(() => {
@@ -166,7 +217,7 @@ const form = reactive({
 	title: '',
 	meetingNature: 'external',
 	unit: '',
-	industry: INDUSTRIES[0],
+	industry: '',
 	district: '',
 	startDate: '',
 	meetingTime: '',
@@ -179,14 +230,12 @@ const form = reactive({
 
 const dayScheduleHint = computed(() => {
 	if (!daySchedules.value.length) return '';
-	return `当天已有排期：${daySchedules.value.join('；')}。仍可继续提交，建议先与负责人联系确认。`;
+	return `当前已有排期 开始时间为${daySchedules.value.join('、')},仍可继续提交，建议先与负责人联系确认。`;
 });
 
 function formatScheduleHint(item: any) {
 	const start = String(item.startTime || '').replace('T', ' ').slice(11, 16);
-	const end = String(item.endTime || '').replace('T', ' ').slice(11, 16);
-	const timeRange = end ? `${start}-${end}` : start;
-	return [timeRange, item.title || item.subject].filter(Boolean).join(' ').trim();
+	return start;
 }
 
 watch(
@@ -218,6 +267,16 @@ function openDatePicker() {
 	el.click();
 }
 
+function openTimePicker() {
+	const el = timeInputRef.value;
+	if (!el) return;
+	if (typeof el.showPicker === 'function') {
+		try { el.showPicker(); return; } catch {}
+	}
+	el.focus();
+	el.click();
+}
+
 const summary = computed<[string, string][]>(() => [
 	['会议主题', form.title],
 	['会议性质', form.meetingNature === 'internal' ? '内部' : '外部'],
@@ -228,7 +287,7 @@ const summary = computed<[string, string][]>(() => [
 	['我公司陪同领导', form.leader || '—'],
 	['客户人数', form.customerCount || '0'],
 	['自有人员人数', form.internalCount || '0'],
-	['所属区县', form.district],
+	['所属区县/部门', form.district],
 	['议程内容', form.agenda || '—'],
 ]);
 
@@ -256,7 +315,7 @@ function buildPayload() {
 
 function resetForm() {
 	Object.assign(form, {
-		id: '', title: '', unit: '', industry: INDUSTRIES[0],
+		id: '', title: '', unit: '', industry: '',
 		meetingNature: 'external', district: districts.value[0] ?? '',
 		startDate: '', meetingTime: '',
 		leader: '', customerCount: '', internalCount: '', agenda: '', remark: '',
@@ -278,7 +337,7 @@ async function openDialog(id?: string) {
 				title: raw.subject || '',
 				meetingNature: raw.meetingNature || 'external',
 				unit: raw.visitorCompany || '',
-				industry: raw.industry || INDUSTRIES[0],
+				industry: raw.industry || '',
 				district: raw.district || districts.value[0] || '',
 				startDate: raw.startTime ? String(raw.startTime).slice(0, 10) : '',
 				meetingTime: raw.startTime ? String(raw.startTime).replace('T', ' ').slice(11, 16) : '',
@@ -330,8 +389,8 @@ async function onSubmit() {
 	saving.value = true;
 	try {
 		if (form.id) await updateAndSubmit(form.id, buildPayload());
-		else await submitApply(buildPayload());
-		ElMessage.success(`申请「${form.title}」已提交，等待审批`);
+		else await saveCompleted(buildPayload());
+		ElMessage.success(form.id ? `申请「${form.title}」已提交，等待审批` : `记录「${form.title}」已保存为已完成`);
 		visible.value = false;
 		emit('refresh');
 	} catch (e: any) {
@@ -351,7 +410,7 @@ defineExpose({ openDialog });
 
 .eh-new__date-field {
 	position: relative;
-	border: 1px solid var(--t-border);
+	border: 1px solid var(--t-border-dark);
 	border-radius: 4px;
 	background: var(--t-surface);
 	box-sizing: border-box;
@@ -359,7 +418,10 @@ defineExpose({ openDialog });
 	outline: none;
 }
 .eh-new__date-field:hover { border-color: var(--t-border-dark); }
-.eh-new__date-field:focus-within { border-color: var(--t-accent); }
+.eh-new__date-field:focus-within {
+	border-color: var(--t-accent);
+	box-shadow: 0 0 0 2px rgba(47, 103, 216, 0.12);
+}
 .eh-new__date-inner {
 	display: flex;
 	align-items: center;
@@ -371,10 +433,38 @@ defineExpose({ openDialog });
 	user-select: none;
 	line-height: 1.2;
 }
-.eh-new__date-val { font-size: 13px; color: var(--t-text1); }
-.eh-new__date-empty { font-size: 13px; color: var(--t-text3); }
+.eh-new__date-val { font-size: 13px; font-weight: 400; color: var(--t-text1); }
+.eh-new__date-empty { font-size: 13px; font-weight: 400; color: var(--t-text3); }
 .eh-new__date-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .eh-new__date-icon-row { display: flex; align-items: center; gap: 2px; flex-shrink: 0; opacity: 0.92; }
+.eh-new__time-field {
+	position: relative;
+	border: 1px solid var(--t-border-dark);
+	border-radius: 4px;
+	background: var(--t-surface);
+	box-sizing: border-box;
+	transition: border-color 0.15s ease;
+	outline: none;
+}
+.eh-new__time-field:hover { border-color: var(--t-border-dark); }
+.eh-new__time-field:focus-within {
+	border-color: var(--t-accent);
+	box-shadow: 0 0 0 2px rgba(47, 103, 216, 0.12);
+}
+.eh-new__time-inner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 10px;
+	min-height: 35px;
+	padding: 8px 10px;
+	pointer-events: none;
+	user-select: none;
+	line-height: 1.2;
+}
+.eh-new__time-val { font-size: 13px; font-weight: 400; color: var(--t-text1); }
+.eh-new__time-empty { font-size: 13px; font-weight: 400; color: var(--t-text3); }
+.eh-new__time-icon-row { display: flex; align-items: center; gap: 2px; flex-shrink: 0; opacity: 0.92; }
 .eh-new__date-input {
 	position: absolute;
 	inset: 0;
@@ -393,7 +483,26 @@ defineExpose({ openDialog });
 	appearance: none;
 	z-index: 1;
 }
-.eh-new__date-input::-webkit-calendar-picker-indicator {
+.eh-new__time-input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	opacity: 0;
+	cursor: pointer;
+	font-size: 16px;
+	color: transparent;
+	background: transparent;
+	box-sizing: border-box;
+	-webkit-appearance: none;
+	appearance: none;
+	z-index: 1;
+}
+.eh-new__date-input::-webkit-calendar-picker-indicator,
+.eh-new__time-input::-webkit-calendar-picker-indicator {
 	position: absolute;
 	inset: 0;
 	width: 100%;
@@ -402,6 +511,10 @@ defineExpose({ openDialog });
 	padding: 0;
 	opacity: 0;
 	cursor: pointer;
+}
+.eh-new__date-input:focus,
+.eh-new__time-input:focus {
+	outline: none;
 }
 
 .eh-new__notice {
@@ -550,8 +663,10 @@ defineExpose({ openDialog });
 	border-radius: 4px;
 	box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 	z-index: 100;
-	overflow: hidden;
-
+	box-sizing: border-box;
+	max-height: 188px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
 }
 .eh-leader-drop-enter-active {
 	transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);

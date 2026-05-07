@@ -86,6 +86,14 @@ export const submitApply = (data: Object) => {
 	});
 };
 
+export const saveCompleted = (data: Object) => {
+	return request({
+		url: '/admin/eh/apply/complete',
+		method: 'post',
+		data,
+	});
+};
+
 export const updateDraft = (id: string, data: Object) => {
 	return request({
 		url: `/admin/eh/apply/${id}/draft`,

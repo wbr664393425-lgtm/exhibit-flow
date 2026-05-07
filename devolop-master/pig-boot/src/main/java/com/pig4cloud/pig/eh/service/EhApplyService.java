@@ -47,6 +47,8 @@ public interface EhApplyService extends IService<EhApply> {
 
 	boolean submitApply(ApplyFormDTO dto);
 
+	boolean saveCompleted(ApplyFormDTO dto);
+
 	boolean updateDraft(Long id, ApplyFormDTO dto);
 
 	boolean updateAndSubmit(Long id, ApplyFormDTO dto);

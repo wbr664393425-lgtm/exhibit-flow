@@ -222,6 +222,7 @@ function fmtTime(v?: string) {
 }
 
 function toApp(raw: any): Application {
+	const hasVisitRecord = raw.actualHeadCount !== null && raw.actualHeadCount !== undefined;
 	return {
 			id: `EH-${raw.id}`,
 			title: raw.title || '-',
@@ -242,7 +243,7 @@ function toApp(raw: any): Application {
 			strategicLevel: v.strategicLevel || '',
 		})),
 		services: [],
-		status: mapStatus(raw.status),
+		status: hasVisitRecord ? 'completed' : mapStatus(raw.status),
 		approvalNodes: (raw.approvalNodes || []).map((n: any) => ({
 			...( {
 				role: n.role || '审批节点',
@@ -327,6 +328,7 @@ function historyLabel(eventType: string): string {
 	const map: Record<string, string> = {
 		submit: '提交申请', resubmit: '重新提交', approve: '审批通过',
 		reject: '审批驳回', reschedule: '申请改期', cancel: '取消申请',
+		complete: '新增完成记录',
 	};
 	return map[eventType] || eventType;
 }

@@ -178,6 +178,31 @@ public class EhApplyServiceImpl extends ServiceImpl<EhApplyMapper, EhApply> impl
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
+	public boolean saveCompleted(ApplyFormDTO dto) {
+		EhApply entity = new EhApply();
+		fillApply(entity, dto, "2");
+		boolean ok = baseMapper.insert(entity) > 0;
+		if (!ok) {
+			return false;
+		}
+		replaceVisitors(entity.getId(), dto.getVisitors());
+		EhVisitRecord visitRecord = new EhVisitRecord();
+		visitRecord.setApplyId(entity.getId());
+		visitRecord.setActualVisitTime(entity.getStartTime());
+		visitRecord.setActualVisitCount(entity.getVisitorCount());
+		visitRecord.setOurLeaderLevel(entity.getTopLeaderTitle());
+		visitRecord.setStatus("1");
+		ehVisitRecordMapper.insert(visitRecord);
+		EhApply patch = new EhApply();
+		patch.setId(entity.getId());
+		patch.setActualCount(entity.getVisitorCount());
+		baseMapper.updateById(patch);
+		recordHistory(entity.getId(), "complete", "管理端新增已完成记录", currentUsername(), dto.getRemark());
+		return true;
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
 	public boolean updateDraft(Long id, ApplyFormDTO dto) {
 		return saveOrUpdateForm(id, dto, "0");
 	}
