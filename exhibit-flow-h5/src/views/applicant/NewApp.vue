@@ -388,6 +388,7 @@ async function onSubmit() {
 .eh-new {
   padding: 16px;
   position: relative;
+  scrollbar-gutter: stable;
 }
 .eh-new__bar {
   display: flex;
@@ -894,7 +895,10 @@ async function onSubmit() {
   border-radius: 4px;
   box-shadow: 0 8px 24px rgba(47, 103, 216, 0.14);
   z-index: 100;
-  overflow: hidden;
+  box-sizing: border-box;
+  max-height: 188px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .eh-leader-combo__opt {
   padding: 10px 12px;
