@@ -105,7 +105,42 @@
         </div>
 
         <div class="eh-new__grid eh-new__grid--2col">
-          <FancySelect label="所属区县" v-model="form.district" :options="districts" required />
+          <div class="eh-new__district-field">
+            <div class="eh-new__district-head">
+              <span class="eh-new__field-label">
+                <span class="eh-new__field-required">✱</span>
+                所属区县/部门
+              </span>
+              <div class="eh-new__district-tabs" aria-label="所属区县或部门填写方式">
+                <button
+                  type="button"
+                  class="eh-new__district-tab"
+                  :class="{ 'eh-new__district-tab--on': districtInputMode === 'district' }"
+                  @click="setDistrictInputMode('district')"
+                >
+                  区县
+                </button>
+                <button
+                  type="button"
+                  class="eh-new__district-tab"
+                  :class="{ 'eh-new__district-tab--on': districtInputMode === 'department' }"
+                  @click="setDistrictInputMode('department')"
+                >
+                  部门
+                </button>
+              </div>
+            </div>
+            <FancySelect
+              v-if="districtInputMode === 'district'"
+              v-model="form.district"
+              :options="districts"
+            />
+            <FancyInput
+              v-else
+              v-model="form.district"
+              placeholder="请输入内部部门名称"
+            />
+          </div>
           <FancyInput label="自有人员人数" v-model="form.internalCount" placeholder="我方到场人数" type="number" />
         </div>
       </div>
@@ -190,6 +225,7 @@ onMounted(async () => {
         customerCount: String(app.customerCount ?? app.headCount ?? ''),
         internalCount: String(app.internalCount ?? ''),
       });
+      districtInputMode.value = app.district && !districts.value.includes(app.district) ? 'department' : 'district';
     }
   }
 });
@@ -243,6 +279,7 @@ const STEPS = ['基本信息', '确认提交'];
 const step = ref(1);
 const submitting = ref(false);
 const leaderOpen = ref(false);
+const districtInputMode = ref<'district' | 'department'>('district');
 const MEETING_TOPICS = ['党建和创', '方案交流', '合作伙伴', '其他'];
 const MEETING_NATURE_OPTIONS = [
   { label: '内部', value: 'internal' },
@@ -266,14 +303,26 @@ const form = reactive({
 const daySchedules = ref<string[]>([]);
 const dayScheduleHint = computed(() => {
   if (!daySchedules.value.length) return '';
-  return `当天已有排期：${daySchedules.value.join('；')}。仍可继续提交，建议先与负责人联系确认。`;
+  return `当前已有排期 开始时间为${daySchedules.value.join('、')},仍可继续提交，建议先与负责人联系确认。`;
 });
+
+function setDistrictInputMode(mode: 'district' | 'department') {
+  if (districtInputMode.value === mode) return;
+  districtInputMode.value = mode;
+  if (mode === 'district') {
+    if (!form.district || !districts.value.includes(form.district)) {
+      form.district = districts.value[0] ?? '';
+    }
+    return;
+  }
+  if (districts.value.includes(form.district)) {
+    form.district = '';
+  }
+}
 
 function formatScheduleHint(item: { startTime?: string; endTime?: string; title?: string }) {
   const start = String(item.startTime || '').replace('T', ' ').slice(11, 16);
-  const end = String(item.endTime || '').replace('T', ' ').slice(11, 16);
-  const timeRange = end ? `${start}-${end}` : start;
-  return [timeRange, item.title].filter(Boolean).join(' ').trim();
+  return start;
 }
 
 watch(
@@ -301,7 +350,7 @@ const summary = computed<[string, string][]>(() => [
   ['我公司陪同领导', form.leader || '—'],
   ['客户人数', form.customerCount || '0'],
   ['自有人员人数', form.internalCount || '0'],
-  ['所属区县', form.district],
+  ['所属区县/部门', form.district],
 ]);
 
 interface Toast { msg: string; type: 'success' | 'info' | 'error' }
@@ -408,6 +457,59 @@ async function onSubmit() {
 }
 .eh-new__grid--2col {
   grid-template-columns: 1fr 1fr;
+}
+.eh-new__district-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.eh-new__district-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+}
+.eh-new__field-label {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: var(--t-text2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.eh-new__field-required {
+  color: var(--t-accent);
+  margin-right: 3px;
+}
+.eh-new__district-tabs {
+  display: inline-flex;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--t-border-dark);
+  border-radius: 4px;
+  background: var(--t-bg);
+}
+.eh-new__district-tab {
+  min-width: 38px;
+  border: none;
+  border-right: 1px solid var(--t-border-dark);
+  background: transparent;
+  color: var(--t-text2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 7px;
+}
+.eh-new__district-tab:last-child {
+  border-right: none;
+}
+.eh-new__district-tab--on {
+  background: var(--t-accent);
+  color: #f8fbff;
 }
 
 /* 参观日期：背景/圆角/描边与 FancyInput、FancySelect 触发器一致 */

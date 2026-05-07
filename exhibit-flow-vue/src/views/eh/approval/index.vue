@@ -6,12 +6,18 @@
 				<div class="eh-appr__head">
 					<h2 class="eh-appr__title">待我审批</h2>
 					<span v-if="pending.length > 0" class="eh-appr__badge">{{ pending.length }} 条待办</span>
-				</div>
-				<div class="eh-appr__list">
-					<div v-if="pending.length === 0" class="eh-appr__empty">
-						<Ic n="checkCircle" :size="44" color="var(--t-text3)" />
-						<p>暂无待审批申请</p>
 					</div>
+					<div class="eh-appr__list">
+						<div v-if="pending.length === 0" class="eh-appr__empty">
+							<div class="eh-appr__empty-icon">
+								<Ic n="checkCircle" :size="34" color="var(--t-accent)" />
+							</div>
+							<div class="eh-appr__empty-title">当前没有需要处理的审批</div>
+							<div class="eh-appr__empty-text">新的展厅申请提交后，会在这里进入待办队列。</div>
+							<div class="eh-appr__empty-actions">
+								<Btn variant="primary" size="sm" icon="rotate" @click="loadData">刷新待办</Btn>
+							</div>
+						</div>
 					<div
 						v-for="a in pending"
 						:key="a.id"
@@ -31,12 +37,42 @@
 				</div>
 			</div>
 
-			<!-- 右侧详情 -->
-			<div class="eh-appr__right">
-				<div v-if="!sel" class="eh-appr__empty-right">
-					<Ic n="clipboard" :size="50" color="var(--t-text3)" />
-					<p>从左侧选择申请查看详情</p>
-				</div>
+				<!-- 右侧详情 -->
+				<div class="eh-appr__right">
+					<div v-if="!sel" class="eh-appr__empty-right">
+						<div class="eh-appr__detail-empty-card">
+							<div class="eh-appr__detail-empty-icon">
+								<Ic n="clipboard" :size="38" color="var(--t-accent)" />
+							</div>
+							<div>
+								<div class="eh-appr__empty-title">暂无审批详情</div>
+								<div class="eh-appr__empty-text">左侧出现待审批申请后，选择一条即可查看来访信息、审批进度和处理入口。</div>
+							</div>
+						</div>
+						<div class="eh-appr__empty-guide">
+							<div class="eh-appr__guide-item">
+								<span>1</span>
+								<div>
+									<strong>等待申请进入审批</strong>
+									<p>申请人提交后自动进入待办列表。</p>
+								</div>
+							</div>
+							<div class="eh-appr__guide-item">
+								<span>2</span>
+								<div>
+									<strong>选择左侧申请</strong>
+									<p>查看客户、时间、人数和审批流。</p>
+								</div>
+							</div>
+							<div class="eh-appr__guide-item">
+								<span>3</span>
+								<div>
+									<strong>处理审批结果</strong>
+									<p>通过或驳回后会同步通知申请人。</p>
+								</div>
+							</div>
+						</div>
+					</div>
 				<Card v-else :style="{ padding: '22px 24px' }">
 					<div class="eh-appr__detail-head">
 						<div>
@@ -254,10 +290,10 @@ async function submitAction() {
 	gap: 18px;
 	align-items: flex-start;
 }
-.eh-appr__left {
-	display: flex;
-	flex-direction: column;
-}
+	.eh-appr__left {
+		display: flex;
+		flex-direction: column;
+	}
 .eh-appr__head {
 	display: flex;
 	align-items: center;
@@ -279,13 +315,13 @@ async function submitAction() {
 	border-radius: 4px;
 	border: 1px solid #c41c1c33;
 }
-.eh-appr__list {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
-	max-height: calc(100vh - 200px);
-	overflow: auto;
-}
+	.eh-appr__list {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		max-height: calc(100vh - 200px);
+		overflow: auto;
+	}
 .eh-appr__card {
 	padding: 12px 14px;
 	border-radius: 6px;
@@ -331,20 +367,122 @@ async function submitAction() {
 	font-weight: 600;
 }
 
-.eh-appr__right {
-	min-width: 0;
-}
-.eh-appr__empty,
-.eh-appr__empty-right {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	padding: 52px 20px;
-	color: var(--t-text3);
-	gap: 10px;
-	font-size: 13px;
-}
+	.eh-appr__right {
+		min-width: 0;
+	}
+	.eh-appr__empty,
+	.eh-appr__empty-right {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		color: var(--t-text2);
+	}
+	.eh-appr__empty {
+		min-height: 260px;
+		padding: 28px 22px;
+		border: 1px solid var(--t-border-dark);
+		border-radius: 8px;
+		background:
+			linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 251, 255, 0.96)),
+			var(--t-surface);
+		box-shadow: 0 14px 34px rgba(47, 103, 216, 0.08);
+		text-align: center;
+	}
+	.eh-appr__empty-right {
+		min-height: 420px;
+		align-items: stretch;
+		justify-content: flex-start;
+		gap: 12px;
+		padding: 0;
+	}
+	.eh-appr__empty-icon,
+	.eh-appr__detail-empty-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		border: 1px solid var(--t-accent-border);
+		background: var(--t-accent-light);
+	}
+	.eh-appr__empty-icon {
+		width: 58px;
+		height: 58px;
+		border-radius: 8px;
+		margin-bottom: 14px;
+	}
+	.eh-appr__detail-empty-icon {
+		width: 64px;
+		height: 64px;
+		border-radius: 8px;
+	}
+	.eh-appr__empty-title {
+		font-size: 15px;
+		font-weight: 700;
+		color: var(--t-text1);
+		line-height: 1.4;
+	}
+	.eh-appr__empty-text {
+		max-width: 360px;
+		margin-top: 6px;
+		font-size: 12px;
+		line-height: 1.7;
+		color: var(--t-text3);
+	}
+	.eh-appr__empty-actions {
+		margin-top: 16px;
+	}
+	.eh-appr__detail-empty-card {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		padding: 26px 28px;
+		border: 1px solid var(--t-border-dark);
+		border-radius: 8px;
+		background:
+			linear-gradient(135deg, rgba(234, 242, 255, 0.72), rgba(255, 255, 255, 0.9)),
+			var(--t-surface);
+		box-shadow: 0 14px 34px rgba(47, 103, 216, 0.08);
+	}
+	.eh-appr__empty-guide {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 10px;
+	}
+	.eh-appr__guide-item {
+		display: flex;
+		gap: 10px;
+		min-height: 86px;
+		padding: 14px;
+		border: 1px solid var(--t-border);
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.72);
+	}
+	.eh-appr__guide-item > span {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		flex-shrink: 0;
+		border-radius: 6px;
+		background: var(--t-accent-light);
+		color: var(--t-accent);
+		font-size: 12px;
+		font-weight: 700;
+	}
+	.eh-appr__guide-item strong {
+		display: block;
+		margin-bottom: 4px;
+		font-size: 12px;
+		color: var(--t-text1);
+	}
+	.eh-appr__guide-item p {
+		margin: 0;
+		font-size: 11px;
+		line-height: 1.6;
+		color: var(--t-text3);
+	}
 
 .eh-appr__detail-head {
 	display: flex;

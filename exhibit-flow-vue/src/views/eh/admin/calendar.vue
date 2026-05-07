@@ -566,9 +566,9 @@ function currentRange() {
 	transition: all 0.2s ease;
 }
 .eh-cal__nav:hover {
-	background: #fff;
-	color: var(--t-text1);
-	border-color: #ddd3c8;
+	background: var(--t-accent-light);
+	color: var(--t-accent);
+	border-color: var(--t-accent-border);
 }
 .eh-cal__range {
 	margin: 0 4px;
@@ -606,11 +606,11 @@ function currentRange() {
 	width: 8px;
 }
 .eh-cal__body::-webkit-scrollbar-thumb {
-	background: #ddd5cc;
+	background: var(--t-border-dark);
 	border-radius: 999px;
 }
 .eh-cal__body::-webkit-scrollbar-track {
-	background: #f5f2ed;
+	background: var(--t-bg);
 }
 
 .eh-cal__grid {
@@ -618,7 +618,7 @@ function currentRange() {
 	grid-template-columns: 56px repeat(7, minmax(0, 1fr));
 }
 .eh-cal__thead {
-	background: #faf8f5;
+	background: var(--t-surface-warm);
 	border-bottom: 2px solid var(--t-border);
 	box-sizing: border-box;
 	padding-right: 8px;
@@ -632,7 +632,7 @@ function currentRange() {
 	border-left: 1px solid var(--t-border);
 }
 .eh-cal__wd-cell--today {
-	background: linear-gradient(180deg, #fff7ea 0%, #fffdf7 100%);
+	background: linear-gradient(180deg, #deeeff 0%, #f0f8ff 100%);
 }
 .eh-cal__wd-num {
 	width: 30px;
@@ -647,36 +647,36 @@ function currentRange() {
 	color: var(--t-text1);
 }
 .eh-cal__wd-num--today {
-	background: linear-gradient(180deg, #2f3133 0%, #1d1f21 100%);
+	background: linear-gradient(180deg, var(--t-accent) 0%, var(--t-accent-strong) 100%);
 	color: #fff;
 }
 .eh-cal__row {
 	height: 52px;
-	border-bottom: 1px solid #efe9e1;
+	border-bottom: 1px solid var(--t-border);
 }
 .eh-cal__hour {
 	padding: 6px 8px;
 	font-size: 11px;
 	color: var(--t-text3);
 	text-align: right;
-	background: #faf8f5;
+	background: var(--t-surface-warm);
 	border-right: 1px solid var(--t-border);
 	padding-top: 9px;
 	font-family: var(--t-font-mono);
 	letter-spacing: 0.2px;
 }
 .eh-cal__slot {
-	border-left: 1px solid #f0ede8;
+	border-left: 1px solid var(--t-border);
 	background:
-		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(237, 231, 223, 0.45) calc(50% - 0.5px), rgba(237, 231, 223, 0.45) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(180, 210, 250, 0.35) calc(50% - 0.5px), rgba(180, 210, 250, 0.35) calc(50% + 0.5px), transparent calc(50% + 0.5px));
 	padding: 0;
 	position: relative;
 	overflow: visible;
 }
 .eh-cal__slot--today {
 	background:
-		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(240, 226, 197, 0.55) calc(50% - 0.5px), rgba(240, 226, 197, 0.55) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-		linear-gradient(180deg, #fffef8 0%, #fffdf6 100%);
+		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(150, 195, 255, 0.5) calc(50% - 0.5px), rgba(150, 195, 255, 0.5) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+		linear-gradient(180deg, #edf6ff 0%, #f0f8ff 100%);
 }
 .eh-cal__event {
 	color: #fff;

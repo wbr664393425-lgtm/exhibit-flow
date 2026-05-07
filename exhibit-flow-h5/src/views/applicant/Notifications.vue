@@ -10,7 +10,7 @@
 
     <div class="eh-notif__summary">
       <div class="eh-notif__summary-icon">
-        <Ic n="bell" :size="18" color="var(--t-accent)" />
+        <img :src="noticeIconMap.reminder" alt="" />
       </div>
       <div>
         <div class="eh-notif__summary-title">展厅申请动态</div>
@@ -26,8 +26,8 @@
         :class="{ 'eh-notif__item--read': n.read, 'eh-notif__item--linked': !!n.applyId }"
         @click="onItemClick(n)"
       >
-        <div class="eh-notif__avatar" :style="{ background: colorMap[n.type].bg, borderColor: colorMap[n.type].c + '22' }">
-          <Ic :n="n.icon" :size="14" :color="colorMap[n.type].c" />
+        <div class="eh-notif__avatar">
+          <img :src="noticeIconFor(n)" alt="" />
         </div>
         <div class="eh-notif__body">
           <div class="eh-notif__line">
@@ -49,6 +49,12 @@ import { useRouter } from 'vue-router';
 import { Ic, MonoLabel } from '../../components/eh';
 import { fetchNotifications, markAllNotificationsRead, markNotificationRead } from '../../api/eh/notice';
 import type { Notification } from '../../mock/applications';
+import noticeApproved from '../../assets/notify-icons/notice-approved.png';
+import noticeBell from '../../assets/notify-icons/notice-bell.png';
+import noticePending from '../../assets/notify-icons/notice-pending.png';
+import noticeRejected from '../../assets/notify-icons/notice-rejected.png';
+import noticeReturned from '../../assets/notify-icons/notice-returned.png';
+import noticeSystem from '../../assets/notify-icons/notice-system.png';
 
 const router = useRouter();
 const items = ref<Notification[]>([]);
@@ -59,13 +65,18 @@ onMounted(async () => {
 
 const unread = computed(() => items.value.filter((n) => !n.read).length);
 
-const colorMap: Record<Notification['type'], { c: string; bg: string }> = {
-  approval: { c: '#f59e0b', bg: '#fffbeb' },
-  approved: { c: 'var(--t-success)', bg: 'var(--t-success-light)' },
-  rejected: { c: 'var(--t-danger)', bg: 'var(--t-danger-light)' },
-  reminder: { c: 'var(--t-accent)', bg: 'var(--t-accent-light)' },
-  system: { c: 'var(--t-text3)', bg: 'var(--t-bg)' },
+const noticeIconMap: Record<Notification['type'], string> = {
+  approval: noticePending,
+  approved: noticeApproved,
+  rejected: noticeRejected,
+  reminder: noticeBell,
+  system: noticeSystem,
 };
+
+function noticeIconFor(n: Notification) {
+  if (n.title.includes('归还') || n.body.includes('归还签收')) return noticeReturned;
+  return noticeIconMap[n.type] || noticeSystem;
+}
 
 async function onItemClick(n: Notification) {
   if (!n.read) {
@@ -132,8 +143,8 @@ async function onMarkAll() {
   box-shadow: rgba(47, 103, 216, 0.08) 0 10px 26px;
 }
 .eh-notif__summary-icon {
-  width: 38px;
-  height: 38px;
+  width: 52px;
+  height: 52px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -141,6 +152,13 @@ async function onMarkAll() {
   flex-shrink: 0;
   background: var(--t-accent-light);
   border: 1px solid var(--t-accent-border);
+  overflow: hidden;
+}
+.eh-notif__summary-icon img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 .eh-notif__summary-title {
   font-size: 14px;
@@ -194,14 +212,18 @@ async function onMarkAll() {
   border-color: var(--t-accent-border);
 }
 .eh-notif__avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
   flex-shrink: 0;
-  border: 1px solid transparent;
+  overflow: hidden;
+  box-shadow: rgba(47, 103, 216, 0.08) 0 8px 18px;
+}
+.eh-notif__avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 .eh-notif__body {
   flex: 1;
