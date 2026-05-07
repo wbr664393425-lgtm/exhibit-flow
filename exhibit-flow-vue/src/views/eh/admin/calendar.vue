@@ -494,19 +494,14 @@ function eventSize(ev: CalEvent) {
 	return 'xl';
 }
 function eventClass(ev: CalEvent) {
-	return `eh-cal__event--${eventSize(ev)}`;
+	return [`eh-cal__event--${eventSize(ev)}`, ev.status === 'approved' ? 'eh-cal__event--approved' : 'eh-cal__event--pending'];
 }
 function eventStyle(ev: CalEvent) {
 	const startMinute = toMinutes(ev.startTime);
 	const duration = eventDurationMinutes(ev);
 	const minuteInHour = startMinute % 60;
 	const pxPerMinute = HOUR_ROW_HEIGHT / 60;
-	const approved = ev.status === 'approved';
 	return {
-		background: approved
-			? 'linear-gradient(180deg, #2f8d2f 0%, #236f23 100%)'
-			: 'linear-gradient(180deg, #d18a1a 0%, #b87710 100%)',
-		border: approved ? '1px solid rgba(28, 83, 28, 0.5)' : '1px solid rgba(132, 86, 15, 0.5)',
 		top: `${minuteInHour * pxPerMinute + 2}px`,
 		height: `${Math.max(44, duration * pxPerMinute - 4)}px`
 	};
@@ -534,8 +529,10 @@ function currentRange() {
 
 <style scoped>
 .eh-cal {
-	padding: 20px 24px;
-	background: var(--t-bg);
+	padding: 20px 24px 28px;
+	background:
+		linear-gradient(180deg, rgba(234, 242, 255, 0.72) 0%, rgba(244, 248, 255, 0.96) 220px),
+		var(--t-bg);
 	min-height: calc(100vh - 100px);
 }
 .eh-cal__head {
@@ -551,9 +548,10 @@ function currentRange() {
 	font-size: 19px;
 	font-weight: 700;
 	color: var(--t-text1);
+	letter-spacing: 0;
 }
 .eh-cal__nav {
-	border: 1px solid var(--t-border);
+	border: 1px solid var(--t-border-dark);
 	background: var(--t-surface);
 	border-radius: 6px;
 	width: 28px;
@@ -563,23 +561,25 @@ function currentRange() {
 	align-items: center;
 	justify-content: center;
 	color: var(--t-text2);
-	transition: all 0.2s ease;
+	box-shadow: 0 1px 2px rgba(47, 103, 216, 0.06);
+	transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
 }
 .eh-cal__nav:hover {
 	background: var(--t-accent-light);
 	color: var(--t-accent);
 	border-color: var(--t-accent-border);
+	box-shadow: 0 4px 12px rgba(47, 103, 216, 0.12);
 }
 .eh-cal__range {
 	margin: 0 4px;
 	padding: 5px 12px;
-	background: #fff;
-	border: 1px solid var(--t-border);
+	background: var(--t-surface);
+	border: 1px solid var(--t-border-dark);
 	border-radius: 6px;
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--t-text1);
-	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 1px 2px rgba(47, 103, 216, 0.06);
 }
 .eh-cal__legend {
 	display: inline-flex;
@@ -600,17 +600,18 @@ function currentRange() {
 	overflow-x: hidden;
 	overflow-y: scroll;
 	scrollbar-gutter: stable;
-	background: #fff;
+	background: var(--t-surface);
 }
 .eh-cal__body::-webkit-scrollbar {
 	width: 8px;
 }
 .eh-cal__body::-webkit-scrollbar-thumb {
-	background: var(--t-border-dark);
+	background: #b8cbed;
 	border-radius: 999px;
+	border: 2px solid var(--t-surface);
 }
 .eh-cal__body::-webkit-scrollbar-track {
-	background: var(--t-bg);
+	background: #eef4ff;
 }
 
 .eh-cal__grid {
@@ -618,26 +619,30 @@ function currentRange() {
 	grid-template-columns: 56px repeat(7, minmax(0, 1fr));
 }
 .eh-cal__thead {
-	background: var(--t-surface-warm);
-	border-bottom: 2px solid var(--t-border);
+	background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
+	border-bottom: 1px solid var(--t-border-dark);
+	border-top: 1px solid var(--t-border);
 	box-sizing: border-box;
 	padding-right: 8px;
 }
 .eh-cal__gutter {
-	border-right: 1px solid var(--t-border);
+	border-right: 1px solid var(--t-border-dark);
+	background: #f8fbff;
 }
 .eh-cal__wd-cell {
-	padding: 10px 6px;
+	padding: 12px 6px 11px;
 	text-align: center;
 	border-left: 1px solid var(--t-border);
+	background: rgba(255, 255, 255, 0.74);
 }
 .eh-cal__wd-cell--today {
-	background: linear-gradient(180deg, #deeeff 0%, #f0f8ff 100%);
+	background: linear-gradient(180deg, #e7f1ff 0%, #f6f9ff 100%);
+	box-shadow: inset 0 3px 0 var(--t-accent);
 }
 .eh-cal__wd-num {
 	width: 30px;
 	height: 30px;
-	border-radius: 50%;
+	border-radius: 999px;
 	margin: 0 auto;
 	display: flex;
 	align-items: center;
@@ -647,8 +652,9 @@ function currentRange() {
 	color: var(--t-text1);
 }
 .eh-cal__wd-num--today {
-	background: linear-gradient(180deg, var(--t-accent) 0%, var(--t-accent-strong) 100%);
+	background: var(--t-accent);
 	color: #fff;
+	box-shadow: 0 5px 12px rgba(47, 103, 216, 0.22);
 }
 .eh-cal__row {
 	height: 52px;
@@ -659,8 +665,8 @@ function currentRange() {
 	font-size: 11px;
 	color: var(--t-text3);
 	text-align: right;
-	background: var(--t-surface-warm);
-	border-right: 1px solid var(--t-border);
+	background: #f8fbff;
+	border-right: 1px solid var(--t-border-dark);
 	padding-top: 9px;
 	font-family: var(--t-font-mono);
 	letter-spacing: 0.2px;
@@ -668,37 +674,47 @@ function currentRange() {
 .eh-cal__slot {
 	border-left: 1px solid var(--t-border);
 	background:
-		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(180, 210, 250, 0.35) calc(50% - 0.5px), rgba(180, 210, 250, 0.35) calc(50% + 0.5px), transparent calc(50% + 0.5px));
+		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(191, 212, 251, 0.42) calc(50% - 0.5px), rgba(191, 212, 251, 0.42) calc(50% + 0.5px), transparent calc(50% + 0.5px));
 	padding: 0;
 	position: relative;
 	overflow: visible;
 }
 .eh-cal__slot--today {
 	background:
-		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(150, 195, 255, 0.5) calc(50% - 0.5px), rgba(150, 195, 255, 0.5) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
-		linear-gradient(180deg, #edf6ff 0%, #f0f8ff 100%);
+		linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(47, 103, 216, 0.18) calc(50% - 0.5px), rgba(47, 103, 216, 0.18) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+		linear-gradient(180deg, rgba(234, 242, 255, 0.58) 0%, rgba(246, 250, 255, 0.68) 100%);
 }
 .eh-cal__event {
-	color: #fff;
-	border-radius: 8px;
-	padding: 7px 9px;
+	color: var(--t-text1);
+	border-radius: 7px;
+	padding: 7px 9px 7px 10px;
 	font-size: 11px;
 	font-weight: 600;
 	cursor: pointer;
 	position: absolute;
-	left: 3px;
-	right: 3px;
+	left: 5px;
+	right: 5px;
 	z-index: 2;
-	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.14);
+	box-shadow: 0 6px 14px rgba(47, 103, 216, 0.12);
 	overflow: hidden;
-	transition: transform 0.15s ease, box-shadow 0.15s ease;
+	transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 	display: flex;
 	flex-direction: column;
 	gap: 3px;
 }
+.eh-cal__event--approved {
+	background: linear-gradient(180deg, #f0f9eb 0%, #e7f4dd 100%);
+	border: 1px solid rgba(44, 100, 21, 0.22);
+	border-left: 4px solid var(--t-success);
+}
+.eh-cal__event--pending {
+	background: linear-gradient(180deg, #fffbeb 0%, #fff3cf 100%);
+	border: 1px solid rgba(146, 64, 14, 0.22);
+	border-left: 4px solid #b87710;
+}
 .eh-cal__event:hover {
 	transform: translateY(-1px);
-	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+	box-shadow: 0 10px 20px rgba(47, 103, 216, 0.18);
 }
 .eh-cal__event--sm {
 	padding: 6px 9px;
@@ -741,7 +757,7 @@ function currentRange() {
 .eh-cal__event--lg .eh-cal__event-time,
 .eh-cal__event--xl .eh-cal__event-time {
 	align-self: flex-start;
-	background: rgba(255, 255, 255, 0.2);
+	background: rgba(255, 255, 255, 0.68);
 	border-radius: 999px;
 	padding: 2px 8px;
 }
@@ -753,7 +769,7 @@ function currentRange() {
 	content: '';
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 55%);
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0) 55%);
 	pointer-events: none;
 }
 .eh-cal__event-title {
@@ -762,14 +778,13 @@ function currentRange() {
 	word-break: break-word;
 	line-height: 1.35;
 	letter-spacing: 0.1px;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.16);
+	text-shadow: none;
 }
 .eh-cal__event-sub {
 	font-size: 10px;
 	font-weight: 500;
 	line-height: 1.25;
-	opacity: 0.88;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.14);
+	color: var(--t-text2);
 	overflow: hidden;
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
@@ -778,15 +793,15 @@ function currentRange() {
 .eh-cal__event-meta {
 	font-size: 10px;
 	font-weight: 500;
-	opacity: 0.95;
 	padding: 1px 7px;
 	width: fit-content;
 	border-radius: 999px;
-	background: rgba(255, 255, 255, 0.18);
+	background: rgba(255, 255, 255, 0.72);
+	color: var(--t-text2);
 }
 .eh-cal__event-time {
 	font-size: 10px;
-	opacity: 0.95;
+	color: var(--t-text3);
 	margin-top: 3px;
 	font-family: var(--t-font-mono);
 	letter-spacing: 0.2px;
