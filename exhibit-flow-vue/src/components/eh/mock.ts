@@ -186,7 +186,7 @@ export const MOCK_CALENDAR = [
 ];
 
 export const SERVICES = ['横幅打印', '茶水', '合影', '摄影', '车辆接送'];
-export const INDUSTRIES = ['信息技术', '政府机构', '金融保险', '建筑工程', '制造业', '能源电力', '互联网', '教育医疗', '商业零售', '其他'];
+export const INDUSTRIES = ['医疗', '教育', '交通', '水利', '党政', '执法', '互联网', '工业', '农商', '金融', '其他'];
 export const DISTRICTS: string[] = [];
 export const LEADERS = ['无', '部门副总', '分管副总', '总经理'];
 export const DEPTS = ['政企客户部', '公共事业部', '家庭客户部', '市场部', '综合部'];
