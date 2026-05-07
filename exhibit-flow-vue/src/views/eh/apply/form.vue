@@ -20,7 +20,7 @@
 
 				<FancySelect label="所属行业" v-model="form.industry" :options="INDUSTRIES" />
 
-				<FancyInput label="参观日期" required hint="点击选择日期，不可早于今天">
+				<FancyInput label="参观日期" required>
 					<div
 						class="eh-new__date-field"
 						role="button"
